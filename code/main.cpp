@@ -52,13 +52,20 @@ int main()
 
     glfwSetFramebufferSizeCallback(Window, WindowSizeCallback);
 
-    real32 vertices[] = {
+    // -1 to 1 and y -1 start from the bottom.
+    real32 Vertices[] = {
 	// first triangle
-	 -0.5f, -0.5f, 0.0f
-	, 0.5f, -0.5f, 0.0f
-	, 0.0f,  0.5f, 0.0f
-	// second triangle	, 0.0f,  0.5f, 0.0f
+           0.5f, 0.5f, 0.0f // top right
+	,  0.5f, -0.5f, 0.0f // bottom right
+        , -0.5f, -0.5f, 0.0f // bottom left
+	, -0.5f,  0.5f, 0.0f // top left
     };
+
+    uint32 Indices[] = {
+	    0, 1, 3
+	  , 1, 2, 3 
+    };
+
     uint32 VAO;
     glGenVertexArrays(1, &VAO);
 
@@ -69,7 +76,13 @@ int main()
     glGenBuffers(1, &VBO);
     
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
+
+    // NOTE(Brad): must be after VBO.
+    uint32 EBO;
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)*3, (void*)0);
     glEnableVertexAttribArray(0);
@@ -138,13 +151,25 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         // NOTE(Brad): state using.
         glClear(GL_COLOR_BUFFER_BIT);
+
+	// NOTE(Brad): select VAO to draw.
+	glBindVertexArray(VAO);
 	
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	// NOTE(Brad): remove VAO to draw.
+	glBindVertexArray(0);		
         
         // NOTE(Brad): swap buffer. 
         glfwSwapBuffers(Window);
         glfwPollEvents();
     }
+
+    // clean up
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+    glDeleteProgram(ShaderProgram);
     
     glfwTerminate();
     return 0;
