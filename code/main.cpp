@@ -55,10 +55,10 @@ int main()
     // -1 to 1 and y -1 start from the bottom.
     real32 Vertices[] = {
 	// first triangle
-           0.5f, 0.5f, 0.0f // top right
-	,  0.5f, -0.5f, 0.0f // bottom right
-        , -0.5f, -0.5f, 0.0f // bottom left
-	, -0.5f,  0.5f, 0.0f // top left
+	0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f // top right
+	,  0.5f, -0.5f,  0.0f,  0.0f,  1.0f,  0.0f // bottom right
+        , -0.5f, -0.5f,  0.0f,  0.0f,  0.0f,  1.0f // bottom left
+	, -0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f // top left
     };
 
     uint32 Indices[] = {
@@ -84,13 +84,20 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)*3, (void*)0);
+    // NOTE(Brad): aPos
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)*6, (void*)0);
     glEnableVertexAttribArray(0);
+    // NOTE(Brad): aColor
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float)*6, (void*)(sizeof(float)*3));
+    glEnableVertexAttribArray(1);
     const char *VertexShaderSource = "#version 330 core\n"
 	"layout (location = 0) in vec3 aPos;\n"
+	"layout (location = 1) in vec3 aColor;\n"
+	"out vec3 VertexColor;\n"
 	"void main()\n"
 	"{\n"
 	"	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+	"	VertexColor = aColor;\n"
 	"}\0";
     
     uint32 VertexShader;
@@ -112,16 +119,18 @@ int main()
         
     const char *FragmentShaderSource1 = "#version 330 core\n"
 	"out vec4 FragColor;\n"
+	"in vec3 VertexColor;\n"
 	"void main()\n"
 	"{\n"
-	"       FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+	"       FragColor = vec4(VertexColor, 1.0f);\n"
 	"}\0";
     
     const char *FragmentShaderSource2 = "#version 330 core\n"
 	"out vec4 FragColor;\n"
+	"uniform vec4 UniColor;\n"
 	"void main()\n"
 	"{\n"
-	"       FragColor = vec4(1.0f, 0.0f, 0.2f, 1.0f);\n"
+	"       FragColor = vec4(UniColor.r, UniColor.g, UniColor.b, UniColor.a);\n"
 	"}\0";
 
     uint32 FragmentShader1;
@@ -167,7 +176,7 @@ int main()
     glDeleteShader(VertexShader);
     glDeleteShader(FragmentShader1);
     glDeleteShader(FragmentShader2);
-    
+
     while(!glfwWindowShouldClose(Window))
     {
         // NOTE(Brad): input.
@@ -184,8 +193,18 @@ int main()
 	
 	glUseProgram(ShaderProgram1);	
 	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-	
-	glUseProgram(ShaderProgram2);	
+
+	real32 TimeValue = glfwGetTime();
+	real32 tValue = (sin(TimeValue * 2) / 2.0f) + 0.5f;
+	int UniColorLocation = glGetUniformLocation(ShaderProgram2, "UniColor");
+	if(UniColorLocation == -1)
+	{
+	    std::cout << "get UniColorLocation FAILED" << std::endl;
+	}
+	glUseProgram(ShaderProgram2);
+	// NOTE(Brad): assign value to uniform.
+	glUniform4f(UniColorLocation, tValue, 0.2f, 0.0f, 1.0f);
+
 	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(sizeof(uint32)*3));
 
 	// NOTE(Brad): remove VAO to draw.
