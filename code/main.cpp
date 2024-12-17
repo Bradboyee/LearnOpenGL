@@ -39,8 +39,10 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    
-    GLFWwindow *Window = glfwCreateWindow(800, 600, "Learn OpenGL", 0, 0);
+
+    int width = 800;
+    int height = 600;
+    GLFWwindow *Window = glfwCreateWindow(width, height, "Learn OpenGL", 0, 0);
     
     
     if(!Window)
@@ -149,16 +151,19 @@ int main()
     // NOTE(Brad): aTexCoords
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float)*8, (void*)(sizeof(float)*6));
     glEnableVertexAttribArray(2);
+    // NOTE(Brad) transformation matrix order is matter !!! scale -> rotate -> translate.
     const char *VertexShaderSource = "#version 330 core\n"
 	"layout (location = 0) in vec3 aPos;\n"
 	"layout (location = 1) in vec3 aColor;\n"
 	"layout (location = 2) in vec2 aTexCoords;\n"
 	"out vec3 VertexColor;\n"
 	"out vec2 TexCoord;\n"
-	"uniform mat4 transform;\n"
+	"uniform mat4 model;\n"
+	"uniform mat4 view;\n"
+	"uniform mat4 projection;\n"
 	"void main()\n"
 	"{\n"
-	"	gl_Position = transform * vec4(aPos, 1.0);\n"
+	"	gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
 	"	VertexColor = aColor;\n"
 	"	TexCoord = aTexCoords;\n"
 	"}\0";
@@ -280,16 +285,22 @@ int main()
 	// NOTE(Brad): assign value to uniform.
 	glUniform4f(UniColorLocation, tValue, 0.2f, 0.0f, 1.0f);
 
-	//NOTE(Brad): transform.    
-	glm::mat4 trans = glm::mat4(1.0f);// identity matrix.
-	trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));// scale.
-	trans = glm::rotate(trans, TimeValue, glm::vec3(0.0f, 1.0f, 0.0f));
-	//std::cout << glm::to_string(trans) << std::endl;
-	std::cout << TimeValue << std::endl;
+	glm::mat4 view = glm::mat4(1.0f);// transform local -> world space matrix.
+	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+	glm::mat4 model = glm::mat4(1.0f);// transform world -> view space matrix.
+	model = glm::rotate(model, TimeValue * glm::radians(50.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	
+	glm::mat4 projection = glm::mat4(1.0f);// view space -> cliped space matrix.	
+	projection = glm::perspective(glm::radians(45.0f), (real32)width/(real32)height, 0.1f, 100.0f);
 		
-	uint32 transformLocation = glGetUniformLocation(ShaderProgram1, "transform");
-	std::cout << transformLocation << std::endl;
-	glUniformMatrix4fv(transformLocation, 1, GL_FALSE, glm::value_ptr(trans));
+	uint32 ModelUniLocation = glGetUniformLocation(ShaderProgram1, "model");
+	uint32 ViewUniLocation = glGetUniformLocation(ShaderProgram1, "view");
+	uint32 ProjectionUniLocation = glGetUniformLocation(ShaderProgram1, "projection");
+	//std::cout << ModelUniLocation << ViewUniLocation << ProjectionUniLocation << std::endl;
+	glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
+	glUniformMatrix4fv(ViewUniLocation, 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(ProjectionUniLocation, 1, GL_FALSE, glm::value_ptr(projection));
 	
 	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(sizeof(uint32)*3));
 
