@@ -126,7 +126,15 @@ int main()
 	20, 21, 23,
 	21, 22, 23
     };
-    
+
+    glm::vec3 CubePosition[] =
+    {
+	glm::vec3( 0.0f, 0.0f, 0.0f ),
+	glm::vec3( 1.0f, 0.0f, -3.0f ),
+	glm::vec3( 1.0f, 1.0f, 2.0f ),
+	glm::vec3( 1.0f, 2.0f, 1.0f ),
+	glm::vec3( 0.4f, 1.0f, -6.0f ),
+    };
     uint32 Texture1;
     glGenTextures(1, &Texture1);
     //NOTE(Brad): gl texture 0 always active so we still dont need this line.
@@ -299,7 +307,7 @@ int main()
 	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 
 	glm::mat4 model = glm::mat4(1.0f);// transform world -> view space matrix.
-	model = glm::rotate(model, TimeValue * glm::radians(50.0f), glm::vec3(1.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(50.0f), glm::vec3(1.0f, 1.0f, 0.0f));
 	
 	glm::mat4 projection = glm::mat4(1.0f);// view space -> cliped space matrix.	
 	projection = glm::perspective(glm::radians(45.0f), (real32)width/(real32)height, 0.1f, 100.0f);
@@ -308,11 +316,19 @@ int main()
 	uint32 ViewUniLocation = glGetUniformLocation(ShaderProgram1, "view");
 	uint32 ProjectionUniLocation = glGetUniformLocation(ShaderProgram1, "projection");
 	//std::cout << ModelUniLocation << ViewUniLocation << ProjectionUniLocation << std::endl;
-	glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
+	//glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
 	glUniformMatrix4fv(ViewUniLocation, 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(ProjectionUniLocation, 1, GL_FALSE, glm::value_ptr(projection));
-	
-	glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);
+
+	for(uint32 CubeIndex = 0;
+	    CubeIndex < ArrayCount(CubePosition);
+	    CubeIndex++)
+	{
+	    model = glm::translate(model, CubePosition[CubeIndex]);
+	    glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
+	    glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);	    
+	}
+
 
 	// NOTE(Brad): remove VAO to draw.
 	glBindVertexArray(0);		
