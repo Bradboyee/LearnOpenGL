@@ -20,6 +20,21 @@ typedef int8_t   int8;
 typedef int16_t  int16;
 typedef int32_t  int32;
 
+typedef int32 bool32;
+
+bool32 First = true;
+real32 LastCursorX = 800.0f/2;
+real32 LastCursorY = 600.0f/2;
+
+glm::vec3 CameraPos = glm::vec3(0.0f, 0.0f, 3.0f); 
+glm::vec3 CameraDirection = glm::vec3(0.0f, 0.0f, -1.0f); 
+glm::vec3 CameraUp = glm::vec3(0.0f, 1.0f, 3.0f);
+
+real32 Yaw = -90.0f;
+real32 Pitch = 0.0f;
+
+real32 FOV = 45.0f;
+
 #define ArrayCount(Count) sizeof(Count)/sizeof(Count[0])
 void WindowSizeCallback(GLFWwindow *Window, int Width, int Height)
 {
@@ -33,6 +48,97 @@ void InputHandler(GLFWwindow *Window)
         glfwSetWindowShouldClose(Window, true);
     }
 };
+
+void MouseCallback2(GLFWwindow* Window, double Xpos, double Ypos)
+{
+    if (First)
+    {
+        LastCursorX = Xpos;
+        LastCursorY = Ypos;
+        First = false;
+    }
+
+    // Calculate offset
+    float OffsetX = Xpos - LastCursorX; // Corrected to match typical FPS behavior
+    float OffsetY = LastCursorY - Ypos; // Y-axis often inverted for screen-to-world mapping
+    LastCursorX = Xpos;
+    LastCursorY = Ypos;
+
+    // Apply sensitivity
+    float Sen = 0.1f;
+    OffsetX *= Sen;
+    OffsetY *= Sen;
+
+    // Update Yaw and Pitch
+    Yaw += OffsetX; // Update Yaw based on X offset
+    Pitch += OffsetY; // Update Pitch based on Y offset
+
+    // Clamp Pitch to prevent gimbal lock
+    if (Pitch > 89.0f)
+        Pitch = 89.0f;
+    if (Pitch < -89.0f)
+        Pitch = -89.0f;
+
+    // Recalculate Front vector
+    glm::vec3 Front;
+    Front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+    Front.y = sin(glm::radians(Pitch));
+    Front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+    CameraDirection = glm::normalize(Front);
+
+    // Debug output
+    std::cout << "Pitch: " << Pitch << " Yaw: " << Yaw << std::endl;
+}
+
+void MouseCallback(GLFWwindow* Window, double Xpos, double Ypos)
+{
+    if(First)
+    {
+	LastCursorX = Xpos;
+	LastCursorY = Ypos;
+	First = false;
+    }
+
+    real32 OffsetX = Xpos - LastCursorX;
+    real32 OffsetY = LastCursorY - Ypos;
+    LastCursorX = Xpos;
+    LastCursorY = Ypos;
+
+    float Sen = 0.075f;
+    OffsetX *= Sen;
+    OffsetY *= Sen;
+
+    Yaw += OffsetX;
+    Pitch += OffsetY;
+    if (Pitch > 89.0f)
+    {
+	Pitch = 89.0f;
+    }    
+    if (Pitch < -89.0f)
+    {
+        Pitch = -89.0f;
+    }
+    glm::vec3 Front;
+    Front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+    Front.y = sin(glm::radians(Pitch));
+    Front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+    std::cout << "Pitch : " << Pitch << " Yaw : " << Yaw << std::endl;
+    CameraDirection = glm::normalize(Front);
+    
+}
+void ScrollCallback(GLFWwindow* Window, double XOffset, double YOffset)
+{
+    FOV += (real32) YOffset;
+    if(FOV < 1.0f)
+    {
+	FOV = 1.0f;
+    }
+    if(FOV > 45.0f)
+    {
+	FOV = 45.0f;
+    }
+	
+}
 
 int main()
 {
@@ -61,6 +167,9 @@ int main()
     }    
 
     glfwSetFramebufferSizeCallback(Window, WindowSizeCallback);
+    glfwSetCursorPosCallback(Window, MouseCallback);
+    glfwSetScrollCallback(Window, ScrollCallback);
+    glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // -1 to 1 and y -1 start from the bottom.
     real32 Vertices[] = {
@@ -277,12 +386,48 @@ int main()
     glUniform1i(glGetUniformLocation(ShaderProgram1, "UniTexture1"), 0);
     glUniform1i(glGetUniformLocation(ShaderProgram1, "UniTexture2"), 1);        
 
-    glEnable(GL_DEPTH_TEST); 
+    glEnable(GL_DEPTH_TEST);
+
+    glm::vec3 From = glm::vec3(0.0f, 0.0f, 3.0f);
+    glm::vec3 To = glm::vec3(0.0f ,0.0f, 0.0f);
+    glm::vec3 Forward = glm::normalize(From - To);
+
+    glm::vec3 TmpUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 Right = glm::cross(TmpUp, Forward);
+    
+    glm::vec3 Up = glm::cross(Forward, Right);
+    
+
+    real32 DeltaTime = 0.0f;
+    real32 LastFrame = glfwGetTime();
+    real32 CameraSpeed = 2.0f;
     while(!glfwWindowShouldClose(Window))
     {
+	real32 CurrentTime = glfwGetTime();
+	DeltaTime = CurrentTime - LastFrame;
+	LastFrame = CurrentTime;
+	//std::cout << "Dt Time : " << DeltaTime << std::endl;
         // NOTE(Brad): input.
         InputHandler(Window);
-        
+
+	if(glfwGetKey(Window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+	    CameraPos += CameraSpeed * CameraDirection * DeltaTime;
+	}
+	if(glfwGetKey(Window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+	    CameraPos -= CameraSpeed * CameraDirection * DeltaTime;
+	}
+	
+	if(glfwGetKey(Window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+	    CameraPos -= glm::normalize(glm::cross(CameraDirection, CameraUp)) * CameraSpeed * DeltaTime;
+	}
+	if(glfwGetKey(Window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+	    CameraPos += glm::normalize(glm::cross(CameraDirection, CameraUp)) * CameraSpeed * DeltaTime;
+	}
+	CameraPos.y = 0.0f;
         // NOTE(Brad): render part.
         // NOTE(Brad): state setting. 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -302,15 +447,19 @@ int main()
 	real32 tValue = (sin(TimeValue * 2) / 2.0f) + 0.5f;
 	//glUseProgram(ShaderProgram2);
 	// NOTE(Brad): assign value to uniform.
-
 	glm::mat4 view = glm::mat4(1.0f);// transform local -> world space matrix.
-	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+	//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
+	view = glm::lookAt(
+	    CameraPos,
+	    CameraPos + CameraDirection,//target
+	    CameraUp
+	    );
 
 	glm::mat4 model = glm::mat4(1.0f);// transform world -> view space matrix.
 	model = glm::rotate(model, glm::radians(50.0f), glm::vec3(1.0f, 1.0f, 0.0f));
 	
 	glm::mat4 projection = glm::mat4(1.0f);// view space -> cliped space matrix.	
-	projection = glm::perspective(glm::radians(45.0f), (real32)width/(real32)height, 0.1f, 100.0f);
+	projection = glm::perspective(glm::radians(FOV), (real32)width/(real32)height, 0.1f, 100.0f);
 		
 	uint32 ModelUniLocation = glGetUniformLocation(ShaderProgram1, "model");
 	uint32 ViewUniLocation = glGetUniformLocation(ShaderProgram1, "view");
