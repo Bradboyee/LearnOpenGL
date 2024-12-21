@@ -35,7 +35,48 @@ real32 Pitch = 0.0f;
 
 real32 FOV = 45.0f;
 
+#define internal static
+#define local_persist static
+#define global_variable static
+
 #define ArrayCount(Count) sizeof(Count)/sizeof(Count[0])
+
+glm::vec3 From = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 To = glm::vec3(0.0f ,0.0f, 0.0f);
+glm::vec3 TmpUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+internal glm::mat4 LookAtMatrix(glm::vec3 From, glm::vec3 To, glm::vec3 TmpUp)
+{
+    //Z axis
+    glm::vec3 Forward = glm::normalize(From - To);
+    //X axis
+    glm::vec3 Right = glm::normalize(glm::cross(TmpUp, Forward));
+    //Y axis
+    glm::vec3 Up = glm::cross(Forward, Right);
+
+    //NOTE(Brad) this is reverse matrix.
+    glm::mat4 Rotation = glm::mat4(1.0f);
+
+    Rotation[0][0] = Right.x;
+    Rotation[1][0] = Right.y;
+    Rotation[2][0] = Right.z;
+    
+    Rotation[0][1] = Up.x;
+    Rotation[1][1] = Up.y;
+    Rotation[2][1] = Up.z;
+
+    Rotation[0][2] = Forward.x;
+    Rotation[1][2] = Forward.y;
+    Rotation[2][2] = Forward.z;
+
+    glm::mat4 Translation = glm::mat4(1.0f);
+    Translation[3][0] = -From.x;
+    Translation[3][1] = -From.y;
+    Translation[3][2] = -From.z;
+
+    return Rotation * Translation;
+}
+
 void WindowSizeCallback(GLFWwindow *Window, int Width, int Height)
 {
     glViewport(0, 0, Width, Height);
@@ -386,17 +427,7 @@ int main()
     glUniform1i(glGetUniformLocation(ShaderProgram1, "UniTexture1"), 0);
     glUniform1i(glGetUniformLocation(ShaderProgram1, "UniTexture2"), 1);        
 
-    glEnable(GL_DEPTH_TEST);
-
-    glm::vec3 From = glm::vec3(0.0f, 0.0f, 3.0f);
-    glm::vec3 To = glm::vec3(0.0f ,0.0f, 0.0f);
-    glm::vec3 Forward = glm::normalize(From - To);
-
-    glm::vec3 TmpUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    glm::vec3 Right = glm::cross(TmpUp, Forward);
-    
-    glm::vec3 Up = glm::cross(Forward, Right);
-    
+    glEnable(GL_DEPTH_TEST);    
 
     real32 DeltaTime = 0.0f;
     real32 LastFrame = glfwGetTime();
@@ -427,7 +458,6 @@ int main()
 	{
 	    CameraPos += glm::normalize(glm::cross(CameraDirection, CameraUp)) * CameraSpeed * DeltaTime;
 	}
-	CameraPos.y = 0.0f;
         // NOTE(Brad): render part.
         // NOTE(Brad): state setting. 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -449,7 +479,12 @@ int main()
 	// NOTE(Brad): assign value to uniform.
 	glm::mat4 view = glm::mat4(1.0f);// transform local -> world space matrix.
 	//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
-	view = glm::lookAt(
+	/* view = glm::lookAt( */
+	/*     CameraPos, */
+	/*     CameraPos + CameraDirection,//target */
+	/*     CameraUp */
+	/*     ); */
+	view = LookAtMatrix(
 	    CameraPos,
 	    CameraPos + CameraDirection,//target
 	    CameraUp
