@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/string_cast.hpp>
+//#include <glm/gtx/string_cast.hpp>
 
 typedef float  real32;
 typedef double real64;
@@ -28,7 +28,7 @@ real32 LastCursorY = 600.0f/2;
 
 glm::vec3 CameraPos = glm::vec3(0.0f, 0.0f, 3.0f); 
 glm::vec3 CameraDirection = glm::vec3(0.0f, 0.0f, -1.0f); 
-glm::vec3 CameraUp = glm::vec3(0.0f, 1.0f, 3.0f);
+glm::vec3 CameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 real32 Yaw = -90.0f;
 real32 Pitch = 0.0f;
@@ -89,49 +89,43 @@ void InputHandler(GLFWwindow *Window)
         glfwSetWindowShouldClose(Window, true);
     }
 };
-
-void MouseCallback2(GLFWwindow* Window, double Xpos, double Ypos)
+void MouseCallback(GLFWwindow* window, double xposIn, double yposIn)
 {
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
     if (First)
     {
-        LastCursorX = Xpos;
-        LastCursorY = Ypos;
+        LastCursorX = xpos;
+        LastCursorY = ypos;
         First = false;
     }
 
-    // Calculate offset
-    float OffsetX = Xpos - LastCursorX; // Corrected to match typical FPS behavior
-    float OffsetY = LastCursorY - Ypos; // Y-axis often inverted for screen-to-world mapping
-    LastCursorX = Xpos;
-    LastCursorY = Ypos;
+    float xoffset = xpos - LastCursorX;
+    float yoffset = LastCursorY - ypos; // reversed since y-coordinates go from bottom to top
+    LastCursorX = xpos;
+    LastCursorY = ypos;
 
-    // Apply sensitivity
-    float Sen = 0.1f;
-    OffsetX *= Sen;
-    OffsetY *= Sen;
+    float sensitivity = 0.1f; // change this value to your liking
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
 
-    // Update Yaw and Pitch
-    Yaw += OffsetX; // Update Yaw based on X offset
-    Pitch += OffsetY; // Update Pitch based on Y offset
+    Yaw += xoffset;
+    Pitch += yoffset;
 
-    // Clamp Pitch to prevent gimbal lock
+    // make sure that when pitch is out of bounds, screen doesn't get flipped
     if (Pitch > 89.0f)
         Pitch = 89.0f;
     if (Pitch < -89.0f)
         Pitch = -89.0f;
 
-    // Recalculate Front vector
-    glm::vec3 Front;
-    Front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-    Front.y = sin(glm::radians(Pitch));
-    Front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-    CameraDirection = glm::normalize(Front);
-
-    // Debug output
-    std::cout << "Pitch: " << Pitch << " Yaw: " << Yaw << std::endl;
+    glm::vec3 front;
+    front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+    front.y = sin(glm::radians(Pitch));
+    front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+    CameraDirection = glm::normalize(front);
 }
-
-void MouseCallback(GLFWwindow* Window, double Xpos, double Ypos)
+void MouseCallbackBrad(GLFWwindow* Window, double Xpos, double Ypos)
 {
     if(First)
     {
@@ -213,42 +207,43 @@ int main()
     glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // -1 to 1 and y -1 start from the bottom.
+    // NOTE(Brad): position 3 texture 2 normal 3
     real32 Vertices[] = {
 	// Front face
-	0.5f,  0.5f,  0.5f, 1.0f, 1.0f, // Top right
-	0.5f, -0.5f,  0.5f, 1.0f, 0.0f, // Bottom right
-	-0.5f, -0.5f,  0.5f, 0.0f, 0.0f, // Bottom left
-	-0.5f,  0.5f,  0.5f, 0.0f, 1.0f, // Top left
+	0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, // Top right
+	0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Bottom right
+	-0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Bottom left
+	-0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // Top left
 
 	// Back face
-	0.5f,  0.5f, -0.5f, 1.0f, 1.0f, // Top right
-	0.5f, -0.5f, -0.5f, 1.0f, 0.0f, // Bottom right
-	-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // Bottom left
-	-0.5f,  0.5f, -0.5f, 0.0f, 1.0f, // Top left
+	0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, // Top right
+	0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f, // Bottom right
+	-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, // Bottom left
+	-0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, // Top left
 
 	// Left face
-	-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, // Top right
-	-0.5f, -0.5f,  0.5f, 1.0f, 0.0f, // Bottom right
-	-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // Bottom left
-	-0.5f,  0.5f, -0.5f, 0.0f, 1.0f, // Top left
+	-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, // Top right
+	-0.5f, -0.5f,  0.5f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, // Bottom right
+	-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, // Bottom left
+	-0.5f,  0.5f, -0.5f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, // Top left
 
 	// Right face
-	0.5f,  0.5f,  0.5f, 1.0f, 1.0f, // Top right
-	0.5f, -0.5f,  0.5f, 1.0f, 0.0f, // Bottom right
-	0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // Bottom left
-	0.5f,  0.5f, -0.5f, 0.0f, 1.0f, // Top left
+	0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Top right
+	0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom right
+	0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom left
+	0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Top left
 
 	// Top face
-	-0.5f,  0.5f, -0.5f, 0.0f, 1.0f, // Top left
-	-0.5f,  0.5f,  0.5f, 0.0f, 0.0f, // Bottom left
-	0.5f,  0.5f,  0.5f, 1.0f, 0.0f, // Bottom right
-	0.5f,  0.5f, -0.5f, 1.0f, 1.0f, // Top right
+	-0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top left
+	-0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Bottom left
+	0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Bottom right
+	0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top right
 
 	// Bottom face
-	-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // Top left
-	-0.5f, -0.5f,  0.5f, 0.0f, 0.0f, // Bottom left
-	0.5f, -0.5f,  0.5f, 1.0f, 0.0f, // Bottom right
-	0.5f, -0.5f, -0.5f, 1.0f, 1.0f  // Top right
+	-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, // Top left
+	-0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, // Bottom left
+	0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, // Bottom right
+	0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f // Top right
     };
 
     uint32 Indices[] = {
@@ -352,16 +347,24 @@ int main()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
 
     // NOTE(Brad): aPos
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)*5, (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)*8, (void*)0);
     glEnableVertexAttribArray(0);
     // NOTE(Brad): aTexCoords
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float)*5, (void*)(sizeof(float)*3));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float)*8, (void*)(sizeof(float)*3));
     glEnableVertexAttribArray(1);
+    // NOTE(Brad): aNormal
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(float)*8, (void*)(sizeof(float)*5));
+    glEnableVertexAttribArray(2);
+    
+    
     // NOTE(Brad) transformation matrix order is matter !!! scale -> rotate -> translate.
     const char *VertexShaderSource = "#version 330 core\n"
 	"layout (location = 0) in vec3 aPos;\n"
 	"layout (location = 1) in vec2 aTexCoords;\n"
+	"layout (location = 2) in vec3 aNormal;\n"
 	"out vec2 TexCoord;\n"
+	"out vec3 FragPos;\n"
+	"out vec3 Normal;\n"
 	"uniform mat4 model;\n"
 	"uniform mat4 view;\n"
 	"uniform mat4 projection;\n"
@@ -369,6 +372,8 @@ int main()
 	"{\n"
 	"	gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
 	"	TexCoord = aTexCoords;\n"
+	"	Normal = aNormal;\n"
+	"	FragPos = vec3(model * vec4(aPos, 1.0f));\n"
 	"}\0";
     
     uint32 VertexShader;
@@ -387,51 +392,109 @@ int main()
     }
 
         
-    const char *FragmentShaderSource1 = "#version 330 core\n"
+    const char *FragmentShaderSource = "#version 330 core\n"
 	"out vec4 FragColor;\n"
 	"in vec2 TexCoord;\n"
+	"in vec3 Normal;\n"
+	"in vec3 FragPos;\n"
 	"uniform sampler2D UniTexture1;\n"
 	"uniform sampler2D UniTexture2;\n"
+	"uniform vec3 UniObjectColor;\n"
+	"uniform vec3 UniLightColor;\n"
+	"uniform vec3 UniLightPosition;\n"
 	"void main()\n"
 	"{\n"
-	"       FragColor = mix(texture(UniTexture1, TexCoord), texture(UniTexture2, TexCoord), 0.2);\n"
+	/* "       FragColor = mix(texture(UniTexture1, TexCoord), texture(UniTexture2, TexCoord), 0.2);\n" */
+	"       float AmbiantStrength = 0.1f;\n"
+	"       vec3 Ambiant = AmbiantStrength * UniLightColor;\n"
+	
+	"       vec3 Norm = normalize(Normal);\n"
+	"       vec3 LightDir = normalize(UniLightPosition - FragPos);\n"
+	
+	"       float Diff = max(dot(Norm, LightDir), 0.0f);\n"
+	"       vec3 Diffuse = Diff * UniLightColor;\n"
+		
+	"       vec3 Result = (Ambiant + Diffuse) * UniObjectColor;\n"	
+	"       FragColor = vec4(Result, 1.0f);\n"
+
 	"}\0";
+    uint32 FragmentShader;
+    FragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
-    uint32 FragmentShader1;
-    FragmentShader1 = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(FragmentShader, 1, &FragmentShaderSource, 0);
+    glCompileShader(FragmentShader);
 
-    glShaderSource(FragmentShader1, 1, &FragmentShaderSource1, 0);
-    glCompileShader(FragmentShader1);
-
-    uint32 ShaderProgram1;
-    ShaderProgram1 = glCreateProgram();
+    uint32 ShaderProgram;
+    ShaderProgram = glCreateProgram();
     
-    glAttachShader(ShaderProgram1, VertexShader);    
-    glAttachShader(ShaderProgram1, FragmentShader1);
+    glAttachShader(ShaderProgram, VertexShader);    
+    glAttachShader(ShaderProgram, FragmentShader);
         
-    glLinkProgram(ShaderProgram1);
+    glLinkProgram(ShaderProgram);
 
-    glGetProgramiv(ShaderProgram1, GL_LINK_STATUS, &Success);
+    glGetProgramiv(ShaderProgram, GL_LINK_STATUS, &Success);
     if(!Success)
     {
-	glGetProgramInfoLog(ShaderProgram1, 512, 0, InfoLog);
-	std::cout << "ERROR::SHADER1::PROGRAM::STATUS_FAILED" << InfoLog << std::endl;
+	glGetProgramInfoLog(ShaderProgram, 512, 0, InfoLog);
+	std::cout << "ERROR::SHADER::PROGRAM::STATUS_FAILED" << InfoLog << std::endl;
     }
+    //------------------- LIGHT SHADER -------------------
+    
+    const char *FragmentLightShaderSource = "#version 330 core\n"
+	"out vec4 FragColor;\n"
+	"void main()\n"
+	"{\n"
+	"       FragColor = vec4(1.0f);\n"
+	"}\0";
+
+    uint32 FragmentLightShader;
+    FragmentLightShader = glCreateShader(GL_FRAGMENT_SHADER);
+
+    glShaderSource(FragmentLightShader, 1, &FragmentLightShaderSource, 0);
+    glCompileShader(FragmentLightShader);
+
+    uint32 ShaderLightProgram;
+    ShaderLightProgram = glCreateProgram();
+    
+    glAttachShader(ShaderLightProgram, VertexShader);    
+    glAttachShader(ShaderLightProgram, FragmentLightShader);
+        
+    glLinkProgram(ShaderLightProgram);
+
+    glGetProgramiv(ShaderLightProgram, GL_LINK_STATUS, &Success);
+    if(!Success)
+    {
+	glGetProgramInfoLog(ShaderLightProgram, 512, 0, InfoLog);
+	std::cout << "ERROR::LIGHT SHADER::PROGRAM::STATUS_FAILED" << InfoLog << std::endl;
+    }
+    //------------------- LIGHT SHADER -------------------
     
     //NOTE(Brad): can delete obj.
     glDeleteShader(VertexShader);
-    glDeleteShader(FragmentShader1);
+    glDeleteShader(FragmentShader);
+    glDeleteShader(FragmentLightShader);
 
     //NOTE(Brad): set location sampler2d.
-    glUseProgram(ShaderProgram1);
-    glUniform1i(glGetUniformLocation(ShaderProgram1, "UniTexture1"), 0);
-    glUniform1i(glGetUniformLocation(ShaderProgram1, "UniTexture2"), 1);        
-
+    glUseProgram(ShaderProgram);
+    glUniform1i(glGetUniformLocation(ShaderProgram, "UniTexture1"), 0);
+    glUniform1i(glGetUniformLocation(ShaderProgram, "UniTexture2"), 1);
+    
+    glm::vec3 ObjectColor = glm::vec3(1.0f, 0.5f, 0.31f);
+    glUniform3fv(glGetUniformLocation(ShaderProgram, "UniObjectColor"), 1, &ObjectColor[0]);
+    glm::vec3 LightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    glUniform3fv(glGetUniformLocation(ShaderProgram, "UniLightColor"), 1, &ObjectColor[0]);
+    //NOTE(Brad): set light.
+    glUseProgram(ShaderLightProgram);
+    
+    glUseProgram(0);
+    
     glEnable(GL_DEPTH_TEST);    
 
     real32 DeltaTime = 0.0f;
     real32 LastFrame = glfwGetTime();
     real32 CameraSpeed = 2.0f;
+
+    glm::vec3 lightPos = glm::vec3(1.2f, 2.0f, 2.0f);
     while(!glfwWindowShouldClose(Window))
     {
 	real32 CurrentTime = glfwGetTime();
@@ -464,69 +527,85 @@ int main()
         // NOTE(Brad): state using.
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// NOTE(Brad): select VAO to draw.
-	glBindVertexArray(VAO);
-	
-	glUseProgram(ShaderProgram1);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, Texture1);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, Texture2);
 
 	real32 TimeValue = glfwGetTime();
 	real32 tValue = (sin(TimeValue * 2) / 2.0f) + 0.5f;
-	//glUseProgram(ShaderProgram2);
-	// NOTE(Brad): assign value to uniform.
-	glm::mat4 view = glm::mat4(1.0f);// transform local -> world space matrix.
+
+	// NOTE(Brad): assign value to uniform.	
+	glm::mat4 model = glm::mat4(1.0f);// transform local -> world space matrix.
+	//model = glm::rotate(model, glm::radians(50.0f), glm::vec3(1.0f, 1.0f, 0.0f));
+	
+	glm::mat4 view = glm::mat4(1.0f);// transform world -> view space matrix.
 	//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
-	/* view = glm::lookAt( */
-	/*     CameraPos, */
-	/*     CameraPos + CameraDirection,//target */
-	/*     CameraUp */
-	/*     ); */
+	
+	glm::mat4 projection = glm::mat4(1.0f);// view space -> cliped space matrix.	
+	projection = glm::perspective(glm::radians(FOV), (real32)width/(real32)height, 0.1f, 100.0f);
+
+	
 	view = LookAtMatrix(
 	    CameraPos,
 	    CameraPos + CameraDirection,//target
 	    CameraUp
 	    );
-
-	glm::mat4 model = glm::mat4(1.0f);// transform world -> view space matrix.
-	model = glm::rotate(model, glm::radians(50.0f), glm::vec3(1.0f, 1.0f, 0.0f));
+       
+	// NOTE(Brad): select VAO to draw.
+	glBindVertexArray(VAO);
 	
-	glm::mat4 projection = glm::mat4(1.0f);// view space -> cliped space matrix.	
-	projection = glm::perspective(glm::radians(FOV), (real32)width/(real32)height, 0.1f, 100.0f);
-		
-	uint32 ModelUniLocation = glGetUniformLocation(ShaderProgram1, "model");
-	uint32 ViewUniLocation = glGetUniformLocation(ShaderProgram1, "view");
-	uint32 ProjectionUniLocation = glGetUniformLocation(ShaderProgram1, "projection");
+	glUseProgram(ShaderProgram);	
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, Texture1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, Texture2);
+	
+	uint32 ModelUniLocation = glGetUniformLocation(ShaderProgram, "model");
+	uint32 ViewUniLocation = glGetUniformLocation(ShaderProgram, "view");
+	uint32 ProjectionUniLocation = glGetUniformLocation(ShaderProgram, "projection");
 	//std::cout << ModelUniLocation << ViewUniLocation << ProjectionUniLocation << std::endl;
 	//glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
 	glUniformMatrix4fv(ViewUniLocation, 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(ProjectionUniLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
-	for(uint32 CubeIndex = 0;
-	    CubeIndex < ArrayCount(CubePosition);
-	    CubeIndex++)
-	{
-	    model = glm::translate(model, CubePosition[CubeIndex]);
-	    glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
-	    glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);	    
-	}
+	glUniform3fv(glGetUniformLocation(ShaderProgram, "UniLightPosition"), 1, &lightPos[0]);
+	
+	model = glm::translate(model, CubePosition[1]);
+	glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
+	
+	glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);
 
+	
+	glUseProgram(ShaderLightProgram);
 
+	uint32 LightModelUniLocation = glGetUniformLocation(ShaderLightProgram, "model");
+	uint32 LightViewUniLocation = glGetUniformLocation(ShaderLightProgram, "view");
+	uint32 LightProjectionUniLocation = glGetUniformLocation(ShaderLightProgram, "projection");
+	//std::cout << ModelUniLocation << ViewUniLocation << ProjectionUniLocation << std::endl;
+	glUniformMatrix4fv(LightViewUniLocation, 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(LightProjectionUniLocation, 1, GL_FALSE, glm::value_ptr(projection));
+
+	model = glm::translate(glm::mat4(1.0f), lightPos);
+	model = glm::scale(model, glm::vec3(0.3f));
+	glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
+	glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);	    
+	
 	// NOTE(Brad): remove VAO to draw.
 	glBindVertexArray(0);		
         
         // NOTE(Brad): swap buffer. 
         glfwSwapBuffers(Window);
         glfwPollEvents();
+
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR) {
+	    std::cerr << "OpenGL Error: " << err << std::endl;
+	}
     }
 
     // clean up
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
-    glDeleteProgram(ShaderProgram1);
+    glDeleteProgram(ShaderProgram);
+    glDeleteProgram(ShaderLightProgram);
     glDeleteTextures(1, &Texture1);
     glDeleteTextures(1, &Texture2);
     glfwTerminate();
