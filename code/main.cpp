@@ -402,6 +402,7 @@ int main()
 	"uniform vec3 UniObjectColor;\n"
 	"uniform vec3 UniLightColor;\n"
 	"uniform vec3 UniLightPosition;\n"
+	"uniform vec3 UniViewPosition;\n"
 	"void main()\n"
 	"{\n"
 	/* "       FragColor = mix(texture(UniTexture1, TexCoord), texture(UniTexture2, TexCoord), 0.2);\n" */
@@ -413,8 +414,14 @@ int main()
 	
 	"       float Diff = max(dot(Norm, LightDir), 0.0f);\n"
 	"       vec3 Diffuse = Diff * UniLightColor;\n"
+	
+	"       float SpecularStrength = 0.5f;\n"
+	"       vec3 ViewDir = normalize(UniViewPosition - FragPos);\n"
+	"       vec3 ReflectDir = reflect(-LightDir, Norm);\n"
+	"       float Spec = pow(max(dot(ReflectDir, ViewDir), 0.0f), 32);\n"
+	"       vec3 Specular = SpecularStrength * Spec * UniLightColor;\n"
 		
-	"       vec3 Result = (Ambiant + Diffuse) * UniObjectColor;\n"	
+	"       vec3 Result = (Ambiant + Diffuse + Specular) * UniObjectColor;\n"	
 	"       FragColor = vec4(Result, 1.0f);\n"
 
 	"}\0";
@@ -483,6 +490,7 @@ int main()
     glUniform3fv(glGetUniformLocation(ShaderProgram, "UniObjectColor"), 1, &ObjectColor[0]);
     glm::vec3 LightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     glUniform3fv(glGetUniformLocation(ShaderProgram, "UniLightColor"), 1, &ObjectColor[0]);
+ 
     //NOTE(Brad): set light.
     glUseProgram(ShaderLightProgram);
     
@@ -494,7 +502,7 @@ int main()
     real32 LastFrame = glfwGetTime();
     real32 CameraSpeed = 2.0f;
 
-    glm::vec3 lightPos = glm::vec3(1.2f, 2.0f, 0.0f);
+    glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 3.0f);
     while(!glfwWindowShouldClose(Window))
     {
 	real32 CurrentTime = glfwGetTime();
@@ -565,9 +573,11 @@ int main()
 	glUniformMatrix4fv(ViewUniLocation, 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(ProjectionUniLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
-	glUniform3fv(glGetUniformLocation(ShaderProgram, "UniLightPosition"), 1, &lightPos[0]);
+	glUniform3fv(glGetUniformLocation(ShaderProgram, "UniLightPosition"), 1, &lightPos[0]);	   
+	glUniform3fv(glGetUniformLocation(ShaderProgram, "UniViewPosition"), 1, &CameraPos[0]);
 	
 	model = glm::translate(model, CubePosition[0]);
+	model = glm::rotate(model, glm::radians(TimeValue * 10), glm::vec3(1.0f, 1.0f, 0.0f));
 	glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
 	
 	glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);
