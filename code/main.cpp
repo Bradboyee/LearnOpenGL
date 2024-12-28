@@ -372,7 +372,7 @@ int main()
 	"{\n"
 	"	gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
 	"	TexCoord = aTexCoords;\n"
-	"	Normal = aNormal;\n"
+	"	Normal = mat3(transpose(inverse(model))) * aNormal;\n"
 	"	FragPos = vec3(model * vec4(aPos, 1.0f));\n"
 	"}\0";
     
@@ -494,7 +494,7 @@ int main()
     real32 LastFrame = glfwGetTime();
     real32 CameraSpeed = 2.0f;
 
-    glm::vec3 lightPos = glm::vec3(1.2f, 2.0f, 2.0f);
+    glm::vec3 lightPos = glm::vec3(1.2f, 2.0f, 0.0f);
     while(!glfwWindowShouldClose(Window))
     {
 	real32 CurrentTime = glfwGetTime();
@@ -567,7 +567,7 @@ int main()
 
 	glUniform3fv(glGetUniformLocation(ShaderProgram, "UniLightPosition"), 1, &lightPos[0]);
 	
-	model = glm::translate(model, CubePosition[1]);
+	model = glm::translate(model, CubePosition[0]);
 	glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
 	
 	glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);
