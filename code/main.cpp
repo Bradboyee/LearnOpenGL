@@ -129,9 +129,9 @@ void MouseCallbackBrad(GLFWwindow* Window, double Xpos, double Ypos)
 {
     if(First)
     {
-	LastCursorX = Xpos;
-	LastCursorY = Ypos;
-	First = false;
+        LastCursorX = Xpos;
+        LastCursorY = Ypos;
+        First = false;
     }
 
     real32 OffsetX = Xpos - LastCursorX;
@@ -147,7 +147,7 @@ void MouseCallbackBrad(GLFWwindow* Window, double Xpos, double Ypos)
     Pitch += OffsetY;
     if (Pitch > 89.0f)
     {
-	Pitch = 89.0f;
+        Pitch = 89.0f;
     }    
     if (Pitch < -89.0f)
     {
@@ -166,11 +166,11 @@ void ScrollCallback(GLFWwindow* Window, double XOffset, double YOffset)
     FOV += (real32) YOffset;
     if(FOV < 1.0f)
     {
-	FOV = 1.0f;
+        FOV = 1.0f;
     }
     if(FOV > 45.0f)
     {
-	FOV = 45.0f;
+        FOV = 45.0f;
     }
 	
 }
@@ -209,77 +209,77 @@ int main()
     // -1 to 1 and y -1 start from the bottom.
     // NOTE(Brad): position 3 texture 2 normal 3
     real32 Vertices[] = {
-	// Front face
-	0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, // Top right
-	0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Bottom right
-	-0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Bottom left
-	-0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // Top left
+        // Front face
+        0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, // Top right
+        0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Bottom right
+        -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Bottom left
+        -0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // Top left
 
-	// Back face
-	0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, // Top right
-	0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f, // Bottom right
-	-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, // Bottom left
-	-0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, // Top left
+        // Back face
+        0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 0.0f, -1.0f, // Top right
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f, // Bottom right
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, // Bottom left
+        -0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, // Top left
 
-	// Left face
-	-0.5f,  0.5f,  0.5f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, // Top right
-	-0.5f, -0.5f,  0.5f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, // Bottom right
-	-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, // Bottom left
-	-0.5f,  0.5f, -0.5f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, // Top left
+        // Left face
+        -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, -1.0f, 0.0f, 0.0f, // Top right
+        -0.5f, -0.5f,  0.5f, 1.0f, 0.0f, -1.0f, 0.0f, 0.0f, // Bottom right
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, // Bottom left
+        -0.5f,  0.5f, -0.5f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, // Top left
 
-	// Right face
-	0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Top right
-	0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom right
-	0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom left
-	0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Top left
+        // Right face
+        0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Top right
+        0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom right
+        0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // Bottom left
+        0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, // Top left
 
-	// Top face
-	-0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top left
-	-0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Bottom left
-	0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Bottom right
-	0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top right
+        // Top face
+        -0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top left
+        -0.5f,  0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Bottom left
+        0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // Bottom right
+        0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top right
 
-	// Bottom face
-	-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, // Top left
-	-0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, // Bottom left
-	0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, // Bottom right
-	0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f // Top right
+        // Bottom face
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, // Top left
+        -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, // Bottom left
+        0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, // Bottom right
+        0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f // Top right
     };
 
     uint32 Indices[] = {
-	// Front face
-	0, 1, 3,
-	1, 2, 3,
+        // Front face
+        0, 1, 3,
+        1, 2, 3,
 
-	// Back face
-	4, 5, 7,
-	5, 6, 7,
+        // Back face
+        4, 5, 7,
+        5, 6, 7,
 
-	// Left face
-	8, 9, 11,
-	9, 10, 11,
+        // Left face
+        8, 9, 11,
+        9, 10, 11,
 
-	// Right face
-	12, 13, 15,
-	13, 14, 15,
+        // Right face
+        12, 13, 15,
+        13, 14, 15,
 
-	// Top face
-	16, 17, 19,
-	17, 18, 19,
+        // Top face
+        16, 17, 19,
+        17, 18, 19,
 
-	// Bottom face
-	20, 21, 23,
-	21, 22, 23
+        // Bottom face
+        20, 21, 23,
+        21, 22, 23
     };
 
     glm::vec3 CubePosition[] =
-    {
-	glm::vec3( 0.0f, 0.0f, 0.0f ),
-	glm::vec3( 1.0f, 0.0f, -3.0f ),
-	glm::vec3( 1.0f, 1.0f, 2.0f ),
-	glm::vec3( 1.0f, 2.0f, 1.0f ),
-	glm::vec3( 0.4f, 1.0f, -6.0f ),
-    };
+        {
+            glm::vec3( 0.0f, 0.0f, 0.0f ),
+            glm::vec3( 1.0f, 0.0f, -3.0f ),
+            glm::vec3( 1.0f, 1.0f, 2.0f ),
+            glm::vec3( 1.0f, 2.0f, 1.0f ),
+            glm::vec3( 0.4f, 1.0f, -6.0f ),
+        };
     uint32 Texture1;
     glGenTextures(1, &Texture1);
     //NOTE(Brad): gl texture 0 always active so we still dont need this line.
@@ -296,12 +296,12 @@ int main()
     uint8 *ContainerData = stbi_load("../data/container.jpg", &Width, &Height, &NRChannel, 0);    
     if(ContainerData)
     {
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Width, Height, 0, GL_RGB, GL_UNSIGNED_BYTE, ContainerData);
-	glGenerateMipmap(GL_TEXTURE_2D);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Width, Height, 0, GL_RGB, GL_UNSIGNED_BYTE, ContainerData);
+        glGenerateMipmap(GL_TEXTURE_2D);
     }
     else
     {
-	std::cout << "Failed to load Image Container" << std::endl;
+        std::cout << "Failed to load Image Container" << std::endl;
     }
     stbi_image_free(ContainerData);
 
@@ -319,12 +319,12 @@ int main()
     uint8 *AwesomeFaceData = stbi_load("../data/awesomeface.png", &Width, &Height, &NRChannel, 0);
     if(AwesomeFaceData)
     {
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, AwesomeFaceData);
-	glGenerateMipmap(GL_TEXTURE_2D);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, AwesomeFaceData);
+        glGenerateMipmap(GL_TEXTURE_2D);
     }
     else
     {
-	std::cout << "Failed to load Image AwesomeFace" << std::endl;
+        std::cout << "Failed to load Image AwesomeFace" << std::endl;
     }
     stbi_image_free(AwesomeFaceData);
     
@@ -359,22 +359,22 @@ int main()
     
     // NOTE(Brad) transformation matrix order is matter !!! scale -> rotate -> translate.
     const char *VertexShaderSource = "#version 330 core\n"
-	"layout (location = 0) in vec3 aPos;\n"
-	"layout (location = 1) in vec2 aTexCoords;\n"
-	"layout (location = 2) in vec3 aNormal;\n"
-	"out vec2 TexCoord;\n"
-	"out vec3 FragPos;\n"
-	"out vec3 Normal;\n"
-	"uniform mat4 model;\n"
-	"uniform mat4 view;\n"
-	"uniform mat4 projection;\n"
-	"void main()\n"
-	"{\n"
-	"	gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
-	"	TexCoord = aTexCoords;\n"
-	"	Normal = mat3(transpose(inverse(model))) * aNormal;\n"
-	"	FragPos = vec3(model * vec4(aPos, 1.0f));\n"
-	"}\0";
+        "layout (location = 0) in vec3 aPos;\n"
+        "layout (location = 1) in vec2 aTexCoords;\n"
+        "layout (location = 2) in vec3 aNormal;\n"
+        "out vec2 TexCoord;\n"
+        "out vec3 FragPos;\n"
+        "out vec3 Normal;\n"
+        "uniform mat4 model;\n"
+        "uniform mat4 view;\n"
+        "uniform mat4 projection;\n"
+        "void main()\n"
+        "{\n"
+        "	gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
+        "	TexCoord = aTexCoords;\n"
+        "	Normal = mat3(transpose(inverse(model))) * aNormal;\n"
+        "	FragPos = vec3(model * vec4(aPos, 1.0f));\n"
+        "}\0";
     
     uint32 VertexShader;
     VertexShader = glCreateShader(GL_VERTEX_SHADER);    
@@ -387,44 +387,58 @@ int main()
 
     if(!Success)
     {
-	glGetShaderInfoLog(VertexShader, 512, 0, InfoLog);
-	std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << InfoLog << std::endl;
+        glGetShaderInfoLog(VertexShader, 512, 0, InfoLog);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << InfoLog << std::endl;
     }
 
         
     const char *FragmentShaderSource = "#version 330 core\n"
-	"out vec4 FragColor;\n"
-	"in vec2 TexCoord;\n"
-	"in vec3 Normal;\n"
-	"in vec3 FragPos;\n"
-	"uniform sampler2D UniTexture1;\n"
-	"uniform sampler2D UniTexture2;\n"
-	"uniform vec3 UniObjectColor;\n"
-	"uniform vec3 UniLightColor;\n"
-	"uniform vec3 UniLightPosition;\n"
-	"uniform vec3 UniViewPosition;\n"
-	"void main()\n"
-	"{\n"
-	/* "       FragColor = mix(texture(UniTexture1, TexCoord), texture(UniTexture2, TexCoord), 0.2);\n" */
-	"       float AmbiantStrength = 0.1f;\n"
-	"       vec3 Ambiant = AmbiantStrength * UniLightColor;\n"
-	
-	"       vec3 Norm = normalize(Normal);\n"
-	"       vec3 LightDir = normalize(UniLightPosition - FragPos);\n"
-	
-	"       float Diff = max(dot(Norm, LightDir), 0.0f);\n"
-	"       vec3 Diffuse = Diff * UniLightColor;\n"
-	
-	"       float SpecularStrength = 0.5f;\n"
-	"       vec3 ViewDir = normalize(UniViewPosition - FragPos);\n"
-	"       vec3 ReflectDir = reflect(-LightDir, Norm);\n"
-	"       float Spec = pow(max(dot(ReflectDir, ViewDir), 0.0f), 32);\n"
-	"       vec3 Specular = SpecularStrength * Spec * UniLightColor;\n"
-		
-	"       vec3 Result = (Ambiant + Diffuse + Specular) * UniObjectColor;\n"	
-	"       FragColor = vec4(Result, 1.0f);\n"
+        "struct material\n"
+        "{\n"
+        "vec3 Ambiant;\n"
+        "vec3 Diffuse;\n"
+        "vec3 Specular;\n"
+        "float Shininess;\n"
+        "};\n"
+        "struct light\n"
+        "{\n"
+        "vec3 position;\n"
 
-	"}\0";
+        "vec3 Ambiant;\n"
+        "vec3 Diffuse;\n"
+        "vec3 Specular;\n"
+        "};\n"
+        "out vec4 FragColor;\n"
+        "in vec2 TexCoord;\n"
+        "in vec3 Normal;\n"
+        "in vec3 FragPos;\n"
+        "uniform sampler2D UniTexture1;\n"
+        "uniform sampler2D UniTexture2;\n"
+
+        "uniform vec3 UniLightPosition;\n"
+        "uniform vec3 UniViewPosition;\n"
+        "uniform material Material;\n"
+        "uniform light Light;\n"
+        "void main()\n"
+        "{\n"
+        /* "       FragColor = mix(texture(UniTexture1, TexCoord), texture(UniTexture2, TexCoord), 0.2);\n" */
+        "       vec3 Ambiant = Material.Ambiant * Light.Ambiant;\n"
+	
+        "       vec3 Norm = normalize(Normal);\n"
+        "       vec3 LightDir = normalize(UniLightPosition - FragPos);\n"
+	
+        "       float Diff = max(dot(Norm, LightDir), 0.0f);\n"
+        "       vec3 Diffuse = (Diff * Material.Diffuse) * Light.Diffuse;\n"
+	
+        "       vec3 ViewDir = normalize(UniViewPosition - FragPos);\n"
+        "       vec3 ReflectDir = reflect(-LightDir, Norm);\n"
+        "       float Spec = pow(max(dot(ReflectDir, ViewDir), 0.0f), 32);\n"
+        "       vec3 Specular = (Spec * Material.Specular) * Light.Specular;\n"
+		
+        "       vec3 Result = (Ambiant + Diffuse + Specular);\n"	
+        "       FragColor = vec4(Result, 1.0f);\n"
+
+        "}\0";
     uint32 FragmentShader;
     FragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
@@ -442,17 +456,17 @@ int main()
     glGetProgramiv(ShaderProgram, GL_LINK_STATUS, &Success);
     if(!Success)
     {
-	glGetProgramInfoLog(ShaderProgram, 512, 0, InfoLog);
-	std::cout << "ERROR::SHADER::PROGRAM::STATUS_FAILED" << InfoLog << std::endl;
+        glGetProgramInfoLog(ShaderProgram, 512, 0, InfoLog);
+        std::cout << "ERROR::SHADER::PROGRAM::STATUS_FAILED" << InfoLog << std::endl;
     }
     //------------------- LIGHT SHADER -------------------
     
     const char *FragmentLightShaderSource = "#version 330 core\n"
-	"out vec4 FragColor;\n"
-	"void main()\n"
-	"{\n"
-	"       FragColor = vec4(1.0f);\n"
-	"}\0";
+        "out vec4 FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "       FragColor = vec4(1.0f);\n"
+        "}\0";
 
     uint32 FragmentLightShader;
     FragmentLightShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -471,8 +485,8 @@ int main()
     glGetProgramiv(ShaderLightProgram, GL_LINK_STATUS, &Success);
     if(!Success)
     {
-	glGetProgramInfoLog(ShaderLightProgram, 512, 0, InfoLog);
-	std::cout << "ERROR::LIGHT SHADER::PROGRAM::STATUS_FAILED" << InfoLog << std::endl;
+        glGetProgramInfoLog(ShaderLightProgram, 512, 0, InfoLog);
+        std::cout << "ERROR::LIGHT SHADER::PROGRAM::STATUS_FAILED" << InfoLog << std::endl;
     }
     //------------------- LIGHT SHADER -------------------
     
@@ -484,13 +498,21 @@ int main()
     //NOTE(Brad): set location sampler2d.
     glUseProgram(ShaderProgram);
     glUniform1i(glGetUniformLocation(ShaderProgram, "UniTexture1"), 0);
-    glUniform1i(glGetUniformLocation(ShaderProgram, "UniTexture2"), 1);
+    glUniform1i(glGetUniformLocation(ShaderProgram, "UniTexture2"), 1);    
     
-    glm::vec3 ObjectColor = glm::vec3(1.0f, 0.5f, 0.31f);
-    glUniform3fv(glGetUniformLocation(ShaderProgram, "UniObjectColor"), 1, &ObjectColor[0]);
-    glm::vec3 LightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-    glUniform3fv(glGetUniformLocation(ShaderProgram, "UniLightColor"), 1, &ObjectColor[0]);
- 
+    //NOTE(Brad): Lighting Material.
+    glm::vec3 Ambiant = glm::vec3(1.0f, 0.5f, 0.31f);
+    glUniform3fv(glGetUniformLocation(ShaderProgram, "Material.Ambiant"), 1, &Ambiant[0]);
+    
+    glm::vec3 Diffuse = glm::vec3(1.0f, 0.5f, 0.31f);
+    glUniform3fv(glGetUniformLocation(ShaderProgram, "Material.Diffuse"), 1, &Diffuse[0]);
+    
+    glm::vec3 Specular = glm::vec3(0.5f, 0.5f, 0.5f);
+    glUniform3fv(glGetUniformLocation(ShaderProgram, "Material.Specular"), 1, &Specular[0]);
+
+    real32 Shininess = 32.0f;
+    glUniform3fv(glGetUniformLocation(ShaderProgram, "Material.Shininess"), 1, &Shininess);
+    
     //NOTE(Brad): set light.
     glUseProgram(ShaderLightProgram);
     
@@ -505,30 +527,30 @@ int main()
     glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 3.0f);
     while(!glfwWindowShouldClose(Window))
     {
-	real32 CurrentTime = glfwGetTime();
-	DeltaTime = CurrentTime - LastFrame;
-	LastFrame = CurrentTime;
-	//std::cout << "Dt Time : " << DeltaTime << std::endl;
+        real32 CurrentTime = glfwGetTime();
+        DeltaTime = CurrentTime - LastFrame;
+        LastFrame = CurrentTime;
+        //std::cout << "Dt Time : " << DeltaTime << std::endl;
         // NOTE(Brad): input.
         InputHandler(Window);
 
-	if(glfwGetKey(Window, GLFW_KEY_W) == GLFW_PRESS)
-	{
-	    CameraPos += CameraSpeed * CameraDirection * DeltaTime;
-	}
-	if(glfwGetKey(Window, GLFW_KEY_S) == GLFW_PRESS)
-	{
-	    CameraPos -= CameraSpeed * CameraDirection * DeltaTime;
-	}
+        if(glfwGetKey(Window, GLFW_KEY_W) == GLFW_PRESS)
+        {
+            CameraPos += CameraSpeed * CameraDirection * DeltaTime;
+        }
+        if(glfwGetKey(Window, GLFW_KEY_S) == GLFW_PRESS)
+        {
+            CameraPos -= CameraSpeed * CameraDirection * DeltaTime;
+        }
 	
-	if(glfwGetKey(Window, GLFW_KEY_A) == GLFW_PRESS)
-	{
-	    CameraPos -= glm::normalize(glm::cross(CameraDirection, CameraUp)) * CameraSpeed * DeltaTime;
-	}
-	if(glfwGetKey(Window, GLFW_KEY_D) == GLFW_PRESS)
-	{
-	    CameraPos += glm::normalize(glm::cross(CameraDirection, CameraUp)) * CameraSpeed * DeltaTime;
-	}
+        if(glfwGetKey(Window, GLFW_KEY_A) == GLFW_PRESS)
+        {
+            CameraPos -= glm::normalize(glm::cross(CameraDirection, CameraUp)) * CameraSpeed * DeltaTime;
+        }
+        if(glfwGetKey(Window, GLFW_KEY_D) == GLFW_PRESS)
+        {
+            CameraPos += glm::normalize(glm::cross(CameraDirection, CameraUp)) * CameraSpeed * DeltaTime;
+        }
         // NOTE(Brad): render part.
         // NOTE(Brad): state setting. 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -536,78 +558,90 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-	real32 TimeValue = glfwGetTime();
-	real32 tValue = (sin(TimeValue * 2) / 2.0f) + 0.5f;
+        real32 TimeValue = glfwGetTime();
+        real32 tValue = (sin(TimeValue * 2) / 2.0f) + 0.5f;
 
-	// NOTE(Brad): assign value to uniform.	
-	glm::mat4 model = glm::mat4(1.0f);// transform local -> world space matrix.
-	//model = glm::rotate(model, glm::radians(50.0f), glm::vec3(1.0f, 1.0f, 0.0f));
+        // NOTE(Brad): assign value to uniform.	
+        glm::mat4 model = glm::mat4(1.0f);// transform local -> world space matrix.
+        //model = glm::rotate(model, glm::radians(50.0f), glm::vec3(1.0f, 1.0f, 0.0f));
 	
-	glm::mat4 view = glm::mat4(1.0f);// transform world -> view space matrix.
-	//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
+        glm::mat4 view = glm::mat4(1.0f);// transform world -> view space matrix.
+        //view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
 	
-	glm::mat4 projection = glm::mat4(1.0f);// view space -> cliped space matrix.	
-	projection = glm::perspective(glm::radians(FOV), (real32)width/(real32)height, 0.1f, 100.0f);
+        glm::mat4 projection = glm::mat4(1.0f);// view space -> cliped space matrix.	
+        projection = glm::perspective(glm::radians(FOV), (real32)width/(real32)height, 0.1f, 100.0f);
 
 	
-	view = LookAtMatrix(
-	    CameraPos,
-	    CameraPos + CameraDirection,//target
-	    CameraUp
-	    );
+        view = LookAtMatrix(
+                            CameraPos,
+                            CameraPos + CameraDirection,//target
+                            CameraUp
+                            );
        
-	// NOTE(Brad): select VAO to draw.
-	glBindVertexArray(VAO);
+        // NOTE(Brad): select VAO to draw.
+        glBindVertexArray(VAO);
 	
-	glUseProgram(ShaderProgram);	
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, Texture1);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, Texture2);
+        glUseProgram(ShaderProgram);	
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, Texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, Texture2);
 	
-	uint32 ModelUniLocation = glGetUniformLocation(ShaderProgram, "model");
-	uint32 ViewUniLocation = glGetUniformLocation(ShaderProgram, "view");
-	uint32 ProjectionUniLocation = glGetUniformLocation(ShaderProgram, "projection");
-	//std::cout << ModelUniLocation << ViewUniLocation << ProjectionUniLocation << std::endl;
-	//glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
-	glUniformMatrix4fv(ViewUniLocation, 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(ProjectionUniLocation, 1, GL_FALSE, glm::value_ptr(projection));
+        uint32 ModelUniLocation = glGetUniformLocation(ShaderProgram, "model");
+        uint32 ViewUniLocation = glGetUniformLocation(ShaderProgram, "view");
+        uint32 ProjectionUniLocation = glGetUniformLocation(ShaderProgram, "projection");
+        //std::cout << ModelUniLocation << ViewUniLocation << ProjectionUniLocation << std::endl;
+        //glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(ViewUniLocation, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(ProjectionUniLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
-	glUniform3fv(glGetUniformLocation(ShaderProgram, "UniLightPosition"), 1, &lightPos[0]);	   
-	glUniform3fv(glGetUniformLocation(ShaderProgram, "UniViewPosition"), 1, &CameraPos[0]);
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "UniLightPosition"), 1, &lightPos[0]);	   
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "UniViewPosition"), 1, &CameraPos[0]);
+
+        glm::vec3 LightColor;
+        LightColor.x = sin(TimeValue * 2.0f);
+        LightColor.y = sin(TimeValue * 0.7f);
+        LightColor.z = sin(TimeValue * 1.3f);
+        
+        glm::vec3 LightDiffuse = LightColor * glm::vec3(0.5f);
+        glm::vec3 LightAmbiant = LightDiffuse * glm::vec3(0.2f);
+        glm::vec3 LightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Ambiant"), 1, &LightAmbiant[0]);   
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Diffuse"), 1, &LightDiffuse[0]);
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Specular"), 1, &LightSpecular[0]);
+
+        model = glm::translate(model, CubePosition[0]);
+        model = glm::rotate(model, glm::radians(TimeValue * 50), glm::vec3(1.0f, 1.0f, 0.0f));
+        glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
 	
-	model = glm::translate(model, CubePosition[0]);
-	model = glm::rotate(model, glm::radians(TimeValue * 10), glm::vec3(1.0f, 1.0f, 0.0f));
-	glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
-	
-	glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);
 
 	
-	glUseProgram(ShaderLightProgram);
+        glUseProgram(ShaderLightProgram);
 
-	uint32 LightModelUniLocation = glGetUniformLocation(ShaderLightProgram, "model");
-	uint32 LightViewUniLocation = glGetUniformLocation(ShaderLightProgram, "view");
-	uint32 LightProjectionUniLocation = glGetUniformLocation(ShaderLightProgram, "projection");
-	//std::cout << ModelUniLocation << ViewUniLocation << ProjectionUniLocation << std::endl;
-	glUniformMatrix4fv(LightViewUniLocation, 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(LightProjectionUniLocation, 1, GL_FALSE, glm::value_ptr(projection));
+        uint32 LightModelUniLocation = glGetUniformLocation(ShaderLightProgram, "model");
+        uint32 LightViewUniLocation = glGetUniformLocation(ShaderLightProgram, "view");
+        uint32 LightProjectionUniLocation = glGetUniformLocation(ShaderLightProgram, "projection");
+        //std::cout << ModelUniLocation << ViewUniLocation << ProjectionUniLocation << std::endl;
+        glUniformMatrix4fv(LightViewUniLocation, 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(LightProjectionUniLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
-	model = glm::translate(glm::mat4(1.0f), lightPos);
-	model = glm::scale(model, glm::vec3(0.3f));
-	glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
-	glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);	    
+        model = glm::translate(glm::mat4(1.0f), lightPos);
+        model = glm::scale(model, glm::vec3(0.3f));
+        glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);	    
 	
-	// NOTE(Brad): remove VAO to draw.
-	glBindVertexArray(0);		
+        // NOTE(Brad): remove VAO to draw.
+        glBindVertexArray(0);		
         
         // NOTE(Brad): swap buffer. 
         glfwSwapBuffers(Window);
         glfwPollEvents();
 
-	GLenum err = glGetError();
-	if (err != GL_NO_ERROR) {
-	    std::cerr << "OpenGL Error: " << err << std::endl;
-	}
+        GLenum err = glGetError();
+        if (err != GL_NO_ERROR) {
+            std::cerr << "OpenGL Error: " << err << std::endl;
+        }
     }
 
     // clean up
