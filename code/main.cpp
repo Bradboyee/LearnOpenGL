@@ -328,6 +328,52 @@ int main()
     }
     stbi_image_free(AwesomeFaceData);
     
+    //NOTE(Brad): switch to texture3.
+    uint32 Texture3;
+    glGenTextures(2, &Texture3);
+    glBindTexture(GL_TEXTURE_2D, Texture3);
+
+    //NOTE(Brad): str = xyz
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    uint8 *Container2Data = stbi_load("../data/container2.png", &Width, &Height, &NRChannel, 0);
+    if(Container2Data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, Container2Data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load Image Container2Data" << std::endl;
+    }
+    stbi_image_free(Container2Data);
+
+    //NOTE(Brad): switch to texture4.
+    uint32 Texture4;
+    glGenTextures(3, &Texture4);
+    glBindTexture(GL_TEXTURE_2D, Texture4);
+
+    //NOTE(Brad): str = xyz
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    uint8 *Container2SpecularData = stbi_load("../data/container2_specular.png", &Width, &Height, &NRChannel, 0);
+    if(Container2SpecularData)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, Container2SpecularData);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load Image Container2SpecularData" << std::endl;
+    }
+    stbi_image_free(Container2SpecularData);
+    
     uint32 VAO;
     glGenVertexArrays(1, &VAO);
 
@@ -395,9 +441,8 @@ int main()
     const char *FragmentShaderSource = "#version 330 core\n"
         "struct material\n"
         "{\n"
-        "vec3 Ambiant;\n"
-        "vec3 Diffuse;\n"
-        "vec3 Specular;\n"
+        "sampler2D Diffuse;\n"
+        "sampler2D Specular;\n"
         "float Shininess;\n"
         "};\n"
         "struct light\n"
@@ -422,18 +467,18 @@ int main()
         "void main()\n"
         "{\n"
         /* "       FragColor = mix(texture(UniTexture1, TexCoord), texture(UniTexture2, TexCoord), 0.2);\n" */
-        "       vec3 Ambiant = Material.Ambiant * Light.Ambiant;\n"
+        "       vec3 Ambiant = Light.Ambiant * vec3(texture(Material.Diffuse, TexCoord));\n"
 	
         "       vec3 Norm = normalize(Normal);\n"
         "       vec3 LightDir = normalize(UniLightPosition - FragPos);\n"
 	
         "       float Diff = max(dot(Norm, LightDir), 0.0f);\n"
-        "       vec3 Diffuse = (Diff * Material.Diffuse) * Light.Diffuse;\n"
+        "       vec3 Diffuse = (Diff * Light.Diffuse) * vec3(texture(Material.Diffuse, TexCoord));\n"
 	
         "       vec3 ViewDir = normalize(UniViewPosition - FragPos);\n"
         "       vec3 ReflectDir = reflect(-LightDir, Norm);\n"
         "       float Spec = pow(max(dot(ReflectDir, ViewDir), 0.0f), 32);\n"
-        "       vec3 Specular = (Spec * Material.Specular) * Light.Specular;\n"
+        "       vec3 Specular = (Spec * vec3(texture(Material.Specular, TexCoord))) * Light.Specular;\n"
 		
         "       vec3 Result = (Ambiant + Diffuse + Specular);\n"	
         "       FragColor = vec4(Result, 1.0f);\n"
@@ -501,14 +546,9 @@ int main()
     glUniform1i(glGetUniformLocation(ShaderProgram, "UniTexture2"), 1);    
     
     //NOTE(Brad): Lighting Material.
-    glm::vec3 Ambiant = glm::vec3(1.0f, 0.5f, 0.31f);
-    glUniform3fv(glGetUniformLocation(ShaderProgram, "Material.Ambiant"), 1, &Ambiant[0]);
     
-    glm::vec3 Diffuse = glm::vec3(1.0f, 0.5f, 0.31f);
-    glUniform3fv(glGetUniformLocation(ShaderProgram, "Material.Diffuse"), 1, &Diffuse[0]);
-    
-    glm::vec3 Specular = glm::vec3(0.5f, 0.5f, 0.5f);
-    glUniform3fv(glGetUniformLocation(ShaderProgram, "Material.Specular"), 1, &Specular[0]);
+    glUniform1i(glGetUniformLocation(ShaderProgram, "Material.Diffuse"), 2);    
+    glUniform1i(glGetUniformLocation(ShaderProgram, "Material.Specular"), 3);
 
     real32 Shininess = 32.0f;
     glUniform3fv(glGetUniformLocation(ShaderProgram, "Material.Shininess"), 1, &Shininess);
@@ -581,11 +621,19 @@ int main()
         // NOTE(Brad): select VAO to draw.
         glBindVertexArray(VAO);
 	
-        glUseProgram(ShaderProgram);	
+        glUseProgram(ShaderProgram);
+        
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, Texture1);
+        
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, Texture2);
+        
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, Texture3);
+        
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, Texture4);
 	
         uint32 ModelUniLocation = glGetUniformLocation(ShaderProgram, "model");
         uint32 ViewUniLocation = glGetUniformLocation(ShaderProgram, "view");
@@ -599,9 +647,9 @@ int main()
         glUniform3fv(glGetUniformLocation(ShaderProgram, "UniViewPosition"), 1, &CameraPos[0]);
 
         glm::vec3 LightColor;
-        LightColor.x = sin(TimeValue * 2.0f);
-        LightColor.y = sin(TimeValue * 0.7f);
-        LightColor.z = sin(TimeValue * 1.3f);
+        LightColor.r = 1.0f;
+        LightColor.g = 1.0f;
+        LightColor.b = 1.0f;
         
         glm::vec3 LightDiffuse = LightColor * glm::vec3(0.5f);
         glm::vec3 LightAmbiant = LightDiffuse * glm::vec3(0.2f);
