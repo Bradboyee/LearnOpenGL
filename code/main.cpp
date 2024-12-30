@@ -274,11 +274,16 @@ int main()
 
     glm::vec3 CubePosition[] =
         {
-            glm::vec3( 0.0f, 0.0f, 0.0f ),
-            glm::vec3( 1.0f, 0.0f, -3.0f ),
-            glm::vec3( 1.0f, 1.0f, 2.0f ),
-            glm::vec3( 1.0f, 2.0f, 1.0f ),
-            glm::vec3( 0.4f, 1.0f, -6.0f ),
+            glm::vec3( 0.0f,  0.0f,  0.0f),
+            glm::vec3( 2.0f,  5.0f, -15.0f),
+            glm::vec3(-1.5f, -2.2f, -2.5f),
+            glm::vec3(-3.8f, -2.0f, -12.3f),
+            glm::vec3( 2.4f, -0.4f, -3.5f),
+            glm::vec3(-1.7f,  3.0f, -7.5f),
+            glm::vec3( 1.3f, -2.0f, -2.5f),
+            glm::vec3( 1.5f,  2.0f, -2.5f),
+            glm::vec3( 1.5f,  0.2f, -1.5f),
+            glm::vec3(-1.3f,  1.0f, -1.5f)
         };
     uint32 Texture1;
     glGenTextures(1, &Texture1);
@@ -447,7 +452,7 @@ int main()
         "};\n"
         "struct light\n"
         "{\n"
-        "vec3 position;\n"
+        "vec3 Direction;\n"
 
         "vec3 Ambiant;\n"
         "vec3 Diffuse;\n"
@@ -460,7 +465,6 @@ int main()
         "uniform sampler2D UniTexture1;\n"
         "uniform sampler2D UniTexture2;\n"
 
-        "uniform vec3 UniLightPosition;\n"
         "uniform vec3 UniViewPosition;\n"
         "uniform material Material;\n"
         "uniform light Light;\n"
@@ -470,7 +474,7 @@ int main()
         "       vec3 Ambiant = Light.Ambiant * vec3(texture(Material.Diffuse, TexCoord));\n"
 	
         "       vec3 Norm = normalize(Normal);\n"
-        "       vec3 LightDir = normalize(UniLightPosition - FragPos);\n"
+        "       vec3 LightDir = normalize(-Light.Direction);\n"
 	
         "       float Diff = max(dot(Norm, LightDir), 0.0f);\n"
         "       vec3 Diffuse = (Diff * Light.Diffuse) * vec3(texture(Material.Diffuse, TexCoord));\n"
@@ -638,12 +642,12 @@ int main()
         uint32 ModelUniLocation = glGetUniformLocation(ShaderProgram, "model");
         uint32 ViewUniLocation = glGetUniformLocation(ShaderProgram, "view");
         uint32 ProjectionUniLocation = glGetUniformLocation(ShaderProgram, "projection");
-        //std::cout << ModelUniLocation << ViewUniLocation << ProjectionUniLocation << std::endl;
-        //glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
+
         glUniformMatrix4fv(ViewUniLocation, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(ProjectionUniLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
-        glUniform3fv(glGetUniformLocation(ShaderProgram, "UniLightPosition"), 1, &lightPos[0]);	   
+        glm::vec3 LightDirection = glm::vec3(-0.2f, -1.0f, -0.3f);
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Direction"), 1, &LightDirection[0]);
         glUniform3fv(glGetUniformLocation(ShaderProgram, "UniViewPosition"), 1, &CameraPos[0]);
 
         glm::vec3 LightColor;
@@ -658,11 +662,17 @@ int main()
         glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Diffuse"), 1, &LightDiffuse[0]);
         glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Specular"), 1, &LightSpecular[0]);
 
-        model = glm::translate(model, CubePosition[0]);
-        model = glm::rotate(model, glm::radians(TimeValue * 50), glm::vec3(1.0f, 1.0f, 0.0f));
-        glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
-	
-        glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);
+        for(int CubeIndex = 0;
+            CubeIndex < ArrayCount(CubePosition);
+            CubeIndex++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, CubePosition[CubeIndex]);
+            model = glm::rotate(model, glm::radians(CubeIndex * 20.0f), glm::vec3(1.0f, 1.0f, 0.0f));
+            glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
+            
+            glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);   
+        }
 
 	
         glUseProgram(ShaderLightProgram);
