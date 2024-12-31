@@ -452,11 +452,16 @@ int main()
         "};\n"
         "struct light\n"
         "{\n"
+        "vec3 Position;\n"
         "vec3 Direction;\n"
 
         "vec3 Ambiant;\n"
         "vec3 Diffuse;\n"
         "vec3 Specular;\n"
+        
+        "float Constant;\n"
+        "float Linear;\n"//NOTE(Brad): faster falloff.
+        "float Quadratic;\n"//NOTE(Brad): slower.
         "};\n"
         "out vec4 FragColor;\n"
         "in vec2 TexCoord;\n"
@@ -471,6 +476,8 @@ int main()
         "void main()\n"
         "{\n"
         /* "       FragColor = mix(texture(UniTexture1, TexCoord), texture(UniTexture2, TexCoord), 0.2);\n" */
+        "       float Distance = length(Light.Position - FragPos);\n"
+        "       float Attenuation = 1.0f / (Light.Constant + (Light.Linear * Distance) + (Light.Quadratic * (Distance * Distance)));\n"
         "       vec3 Ambiant = Light.Ambiant * vec3(texture(Material.Diffuse, TexCoord));\n"
 	
         "       vec3 Norm = normalize(Normal);\n"
@@ -484,6 +491,9 @@ int main()
         "       float Spec = pow(max(dot(ReflectDir, ViewDir), 0.0f), 32);\n"
         "       vec3 Specular = (Spec * vec3(texture(Material.Specular, TexCoord))) * Light.Specular;\n"
 		
+        "       Ambiant *= Attenuation;\n"	
+        "       Diffuse *= Attenuation;\n"	
+        "       Specular *= Attenuation;\n"	
         "       vec3 Result = (Ambiant + Diffuse + Specular);\n"	
         "       FragColor = vec4(Result, 1.0f);\n"
 
@@ -646,7 +656,7 @@ int main()
         glUniformMatrix4fv(ViewUniLocation, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(ProjectionUniLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
-        glm::vec3 LightDirection = glm::vec3(-0.2f, -1.0f, -0.3f);
+        glm::vec3 LightDirection = glm::vec3(0.2f, -1.0f, -0.3f);
         glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Direction"), 1, &LightDirection[0]);
         glUniform3fv(glGetUniformLocation(ShaderProgram, "UniViewPosition"), 1, &CameraPos[0]);
 
@@ -658,9 +668,14 @@ int main()
         glm::vec3 LightDiffuse = LightColor * glm::vec3(0.5f);
         glm::vec3 LightAmbiant = LightDiffuse * glm::vec3(0.2f);
         glm::vec3 LightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.LightPos"), 1, &lightPos[0]);   
         glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Ambiant"), 1, &LightAmbiant[0]);   
         glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Diffuse"), 1, &LightDiffuse[0]);
         glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Specular"), 1, &LightSpecular[0]);
+        
+        glUniform1f(glGetUniformLocation(ShaderProgram, "Light.Constant"), 1.0f);
+        glUniform1f(glGetUniformLocation(ShaderProgram, "Light.Linear"), 0.09f);
+        glUniform1f(glGetUniformLocation(ShaderProgram, "Light.Quadratic"), 0.032f);
 
         for(int CubeIndex = 0;
             CubeIndex < ArrayCount(CubePosition);
