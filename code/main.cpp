@@ -456,6 +456,7 @@ int main()
         "vec3 Direction;\n"
         
         "float CutOff;\n"
+        "float OuterCutOff;\n"
 
         "vec3 Ambiant;\n"
         "vec3 Diffuse;\n"
@@ -481,10 +482,8 @@ int main()
         	
         "       vec3 LightDir = normalize(Light.Position - FragPos);\n"// 1 <---- 0
         
-        "       float Theta = dot(LightDir, normalize(-Light.Direction));\n"// dot more value means a angle is less.
-        
-        "       if(Theta > Light.CutOff)\n"
-        "       {\n"
+        //        "       if(Theta > Light.CutOff)\n"
+        //        "       {\n"
         
         "       vec3 Norm = normalize(Normal);\n"
         "       float Distance = length(Light.Position - FragPos);\n"
@@ -498,20 +497,26 @@ int main()
         "       vec3 ReflectDir = reflect(-LightDir, Norm);\n"
         "       float Spec = pow(max(dot(ReflectDir, ViewDir), 0.0f), 32);\n"
         "       vec3 Specular = (Spec * vec3(texture(Material.Specular, TexCoord))) * Light.Specular;\n"
-		
+		        
+        "       float Theta = dot(LightDir, normalize(-Light.Direction));\n"// angle more = value less.
+        "       float Epsilon = Light.CutOff - Light.OuterCutOff;\n"// angle more = value less.
+        "       float Intensity = clamp((Theta - Light.OuterCutOff) / Epsilon, 0.0f, 1.0f);\n"
+        "       Diffuse *= Intensity;\n"	
+        "       Specular *= Intensity;\n"
+        
         "       Ambiant *= Attenuation;\n"	
         "       Diffuse *= Attenuation;\n"	
         "       Specular *= Attenuation;\n"	
         "       vec3 Result = (Ambiant + Diffuse + Specular);\n"	
         "       FragColor = vec4(Result, 1.0f);\n"
 
-        "       }\n"
-        "       else\n"
-        "       {\n"
+        //        "       }\n"
+        //        "       else\n"
+        //        "       {\n"
 
-        "       FragColor = vec4(Light.Ambiant * texture(Material.Diffuse, TexCoord).rgb, 1.0f);\n"
+        //        "       FragColor = vec4(Light.Ambiant * texture(Material.Diffuse, TexCoord).rgb, 1.0f);\n"
         
-        "       }\n"                
+        //        "       }\n"                
 
         "}\0";
     uint32 FragmentShader;
@@ -690,6 +695,7 @@ int main()
         glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Specular"), 1, &LightSpecular[0]);
         
         glUniform1f(glGetUniformLocation(ShaderProgram, "Light.CutOff"), glm::cos(glm::radians(12.5f)));
+        glUniform1f(glGetUniformLocation(ShaderProgram, "Light.OuterCutOff"), glm::cos(glm::radians(17.5f)));
         glUniform1f(glGetUniformLocation(ShaderProgram, "Light.Constant"), 1.0f);
         glUniform1f(glGetUniformLocation(ShaderProgram, "Light.Linear"), 0.09f);
         glUniform1f(glGetUniformLocation(ShaderProgram, "Light.Quadratic"), 0.032f);
