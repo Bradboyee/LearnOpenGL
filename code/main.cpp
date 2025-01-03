@@ -444,28 +444,49 @@ int main()
 
         
     const char *FragmentShaderSource = "#version 330 core\n"
+        
         "struct material\n"
         "{\n"
-        "sampler2D Diffuse;\n"
-        "sampler2D Specular;\n"
-        "float Shininess;\n"
+        "	sampler2D Diffuse;\n"
+        "	sampler2D Specular;\n"
+        "	float Shininess;\n"
         "};\n"
-        "struct light\n"
+        
+        "struct direction_light\n"
         "{\n"
-        "vec3 Position;\n"
-        "vec3 Direction;\n"
-        
-        "float CutOff;\n"
-        "float OuterCutOff;\n"
+        "	vec3 Direction;\n"         	
 
-        "vec3 Ambiant;\n"
-        "vec3 Diffuse;\n"
-        "vec3 Specular;\n"
-        
-        "float Constant;\n"
-        "float Linear;\n"//NOTE(Brad): faster falloff.
-        "float Quadratic;\n"//NOTE(Brad): slower.
+        "	vec3 Ambiant;\n"
+        "	vec3 Diffuse;\n"
+        "	vec3 Specular;\n"         	
         "};\n"
+        
+        "struct point_light\n"
+        "{\n"
+        "	vec3 Position;\n"
+
+        "	vec3 Ambiant;\n"
+        "	vec3 Diffuse;\n"
+        "	vec3 Specular;\n"
+        
+        "	float Constant;\n"
+        "	float Linear;\n"//NOTE(Brad): faster falloff.
+        "	float Quadratic;\n"//NOTE(Brad): slower.
+        "};\n"
+
+        "struct spot_light\n"
+        "{\n"
+        "	vec3 Position;\n"
+        "	vec3 Direction;\n"
+        
+        "	float CutOff;\n"
+        "	float OuterCutOff;\n"
+        
+        "	vec3 Ambiant;\n"
+        "	vec3 Diffuse;\n"
+        "	vec3 Specular;\n"
+        "};\n"
+        
         "out vec4 FragColor;\n"
         "in vec2 TexCoord;\n"
         "in vec3 Normal;\n"
@@ -475,48 +496,82 @@ int main()
 
         "uniform vec3 UniViewPosition;\n"
         "uniform material Material;\n"
-        "uniform light Light;\n"
-        "void main()\n"
+        
+        "uniform spot_light SpotLight;\n"
+        "uniform point_light PointLight;\n"
+        "uniform direction_light DirectionLight;\n"
+
+        "vec3 PDirectionLight(direction_light DirLight, vec3 NormalVec, vec3 ViewDirection)\n"
         "{\n"
-        /* "       FragColor = mix(texture(UniTexture1, TexCoord), texture(UniTexture2, TexCoord), 0.2);\n" */
-        	
-        "       vec3 LightDir = normalize(Light.Position - FragPos);\n"// 1 <---- 0
+        "       vec3 LightDir = normalize(-DirLight.Direction);\n"
+        "       vec3 ReflectDir = reflect(-LightDir, NormalVec);\n"
         
-        //        "       if(Theta > Light.CutOff)\n"
-        //        "       {\n"
+        "       float Diff = max(dot(NormalVec, LightDir), 0.0f);\n"
+        "       float Spec = pow(max(dot(ReflectDir, ViewDirection), 0.0f), Material.Shininess);\n"
         
-        "       vec3 Norm = normalize(Normal);\n"
-        "       float Distance = length(Light.Position - FragPos);\n"
-        "       float Attenuation = 1.0f / (Light.Constant + (Light.Linear * Distance) + (Light.Quadratic * (Distance * Distance)));\n"
-        "       vec3 Ambiant = Light.Ambiant * vec3(texture(Material.Diffuse, TexCoord));\n"
-	
-        "       float Diff = max(dot(Norm, LightDir), 0.0f);\n"
-        "       vec3 Diffuse = (Diff * Light.Diffuse) * vec3(texture(Material.Diffuse, TexCoord));\n"
-	
-        "       vec3 ViewDir = normalize(UniViewPosition - FragPos);\n"
-        "       vec3 ReflectDir = reflect(-LightDir, Norm);\n"
-        "       float Spec = pow(max(dot(ReflectDir, ViewDir), 0.0f), 32);\n"
-        "       vec3 Specular = (Spec * vec3(texture(Material.Specular, TexCoord))) * Light.Specular;\n"
-		        
-        "       float Theta = dot(LightDir, normalize(-Light.Direction));\n"// angle more = value less.
-        "       float Epsilon = Light.CutOff - Light.OuterCutOff;\n"// angle more = value less.
-        "       float Intensity = clamp((Theta - Light.OuterCutOff) / Epsilon, 0.0f, 1.0f);\n"
-        "       Diffuse *= Intensity;\n"	
-        "       Specular *= Intensity;\n"
+        "       vec3 Ambiant = DirLight.Ambiant * vec3(texture(Material.Diffuse, TexCoord));\n"
+        "       vec3 Specular = Spec * DirLight.Specular * vec3(texture(Material.Specular, TexCoord));\n"
+        "       vec3 Diffuse = Diff * DirLight.Diffuse * vec3(texture(Material.Diffuse, TexCoord));\n"
+        
+        "       return (Ambiant + Diffuse + Specular);\n"
+        "};\n"
+        
+        "vec3 APointLight(point_light PointLight, vec3 NormalVec, vec3 ViewDirection, vec3 FragPos)\n"
+        "{\n"
+        "       vec3 LightDir = normalize(PointLight.Position - FragPos);\n"
+        "       vec3 ReflectDir = reflect(-LightDir, NormalVec);\n"
+        
+        "       float Diff = max(dot(NormalVec, LightDir), 0.0f);\n"
+        "       float Spec = pow(max(dot(ReflectDir, ViewDirection), 0.0f), Material.Shininess);\n"
+
+        "       float Distance = length(PointLight.Position - FragPos);\n"
+        "       float Attenuation = 1.0f / (PointLight.Constant + (PointLight.Linear * Distance) + (PointLight.Quadratic * (Distance * Distance)));\n"
+
+        "       vec3 Ambiant = PointLight.Ambiant * vec3(texture(Material.Diffuse, TexCoord));\n"
+        "       vec3 Specular = Spec * PointLight.Specular * vec3(texture(Material.Specular, TexCoord));\n"
+        "       vec3 Diffuse = Diff * PointLight.Diffuse * vec3(texture(Material.Diffuse, TexCoord));\n"
         
         "       Ambiant *= Attenuation;\n"	
         "       Diffuse *= Attenuation;\n"	
-        "       Specular *= Attenuation;\n"	
-        "       vec3 Result = (Ambiant + Diffuse + Specular);\n"	
-        "       FragColor = vec4(Result, 1.0f);\n"
+        "       Specular *= Attenuation;\n"
 
-        //        "       }\n"
-        //        "       else\n"
-        //        "       {\n"
-
-        //        "       FragColor = vec4(Light.Ambiant * texture(Material.Diffuse, TexCoord).rgb, 1.0f);\n"
+        "       return (Ambiant + Diffuse + Specular);\n"
+        "};\n"
         
-        //        "       }\n"                
+        "vec3 CSpotLight(spot_light SpotLight, vec3 NormalVec, vec3 ViewDirection, vec3 FragPos)\n"
+        "{\n"
+        "       vec3 LightDir = normalize(SpotLight.Position - FragPos);\n"
+        "       vec3 ReflectDir = reflect(-LightDir, NormalVec);\n"
+        
+        "       float Diff = max(dot(NormalVec, LightDir), 0.0f);\n"
+        "       float Spec = pow(max(dot(ReflectDir, ViewDirection), 0.0f), Material.Shininess);\n"
+        
+        "       float Theta = dot(LightDir, normalize(-SpotLight.Direction));\n"// angle more = value less.
+        "       float Epsilon = SpotLight.CutOff - SpotLight.OuterCutOff;\n"// angle more = value less.
+        "       float Intensity = clamp((Theta - SpotLight.OuterCutOff) / Epsilon, 0.0f, 1.0f);\n"
+
+        "       vec3 Ambiant = SpotLight.Ambiant * vec3(texture(Material.Diffuse, TexCoord));\n"
+        "       vec3 Specular = Spec * SpotLight.Specular * vec3(texture(Material.Specular, TexCoord));\n"
+        "       vec3 Diffuse = Diff * SpotLight.Diffuse * vec3(texture(Material.Diffuse, TexCoord));\n"
+        
+        "       Ambiant *= Intensity;\n"	
+        "       Diffuse *= Intensity;\n"	
+        "       Specular *= Intensity;\n"
+
+        "       return (Ambiant + Diffuse + Specular);\n"
+        "};\n"
+
+        "void main()\n"
+        "{\n"
+        	
+        "       vec3 Norm = normalize(Normal);\n"	
+        "       vec3 ViewDir = normalize(UniViewPosition - FragPos);\n"
+        
+        "       vec3 Result = PDirectionLight(DirectionLight, Norm, ViewDir);\n"
+        "       Result += APointLight(PointLight, Norm, ViewDir, FragPos);\n"
+        "       Result += CSpotLight(SpotLight, Norm, ViewDir, FragPos);\n"
+        
+        "       FragColor = vec4(Result, 1.0f);\n"
 
         "}\0";
     uint32 FragmentShader;
@@ -586,7 +641,7 @@ int main()
     glUniform1i(glGetUniformLocation(ShaderProgram, "Material.Specular"), 3);
 
     real32 Shininess = 32.0f;
-    glUniform3fv(glGetUniformLocation(ShaderProgram, "Material.Shininess"), 1, &Shininess);
+    glUniform1f(glGetUniformLocation(ShaderProgram, "Material.Shininess"), Shininess);
     
     //NOTE(Brad): set light.
     glUseProgram(ShaderLightProgram);
@@ -599,7 +654,7 @@ int main()
     real32 LastFrame = glfwGetTime();
     real32 CameraSpeed = 2.0f;
 
-    glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 3.0f);
+    glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 30.0f);
     while(!glfwWindowShouldClose(Window))
     {
         real32 CurrentTime = glfwGetTime();
@@ -625,6 +680,14 @@ int main()
         if(glfwGetKey(Window, GLFW_KEY_D) == GLFW_PRESS)
         {
             CameraPos += glm::normalize(glm::cross(CameraDirection, CameraUp)) * CameraSpeed * DeltaTime;
+        }
+        if(glfwGetKey(Window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        {
+            CameraPos += CameraSpeed * CameraUp * DeltaTime;
+        }
+        if(glfwGetKey(Window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        {
+            CameraPos -= CameraSpeed * CameraUp * DeltaTime;
         }
         // NOTE(Brad): render part.
         // NOTE(Brad): state setting. 
@@ -676,30 +739,63 @@ int main()
 
         glUniformMatrix4fv(ViewUniLocation, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(ProjectionUniLocation, 1, GL_FALSE, glm::value_ptr(projection));
-
-        glm::vec3 LightDirection = glm::vec3(0.2f, -1.0f, -0.3f);
-        glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Direction"), 1, &CameraDirection[0]);
-        glUniform3fv(glGetUniformLocation(ShaderProgram, "UniViewPosition"), 1, &CameraPos[0]);
-        glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Position"), 1, &CameraPos[0]);
         
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "UniViewPosition"), 1, &CameraPos[0]);
+        
+        //DirectionLight
+                
         glm::vec3 LightColor;
         LightColor.r = 1.0f;
-        LightColor.g = 1.0f;
-        LightColor.b = 1.0f;
+        LightColor.g = 0.0f;
+        LightColor.b = 0.0f;
         
+        glm::vec3 DirectionLightDirection = glm::vec3(1.0f, 0.0f, 0.0f);//NOTE light --> object direction
+        
+        glm::vec3 DirectionLightDiffuse = LightColor * glm::vec3(0.5f);
+        glm::vec3 DirectionLightAmbiant = DirectionLightDiffuse * glm::vec3(0.2f);
+        glm::vec3 DirectionLightSpecular = glm::vec3(1.0f);
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "DirectionLight.Direction"), 1, &DirectionLightDirection[0]);   
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "DirectionLight.Ambiant"), 1, &DirectionLightAmbiant[0]);   
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "DirectionLight.Diffuse"), 1, &DirectionLightDiffuse[0]);
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "DirectionLight.Specular"), 1, &DirectionLightSpecular[0]);
+        
+        //PointLight
+        
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "PointLight.Position"), 1, &CameraPos[0]);
+
         glm::vec3 LightDiffuse = LightColor * glm::vec3(0.5f);
         glm::vec3 LightAmbiant = LightDiffuse * glm::vec3(0.2f);
-        glm::vec3 LightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
-        glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Ambiant"), 1, &LightAmbiant[0]);   
-        glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Diffuse"), 1, &LightDiffuse[0]);
-        glUniform3fv(glGetUniformLocation(ShaderProgram, "Light.Specular"), 1, &LightSpecular[0]);
-        
-        glUniform1f(glGetUniformLocation(ShaderProgram, "Light.CutOff"), glm::cos(glm::radians(12.5f)));
-        glUniform1f(glGetUniformLocation(ShaderProgram, "Light.OuterCutOff"), glm::cos(glm::radians(17.5f)));
-        glUniform1f(glGetUniformLocation(ShaderProgram, "Light.Constant"), 1.0f);
-        glUniform1f(glGetUniformLocation(ShaderProgram, "Light.Linear"), 0.09f);
-        glUniform1f(glGetUniformLocation(ShaderProgram, "Light.Quadratic"), 0.032f);
+        glm::vec3 LightSpecular = glm::vec3(1.0f);
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "PointLight.Ambiant"), 1, &LightAmbiant[0]);   
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "PointLight.Diffuse"), 1, &LightDiffuse[0]);
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "PointLight.Specular"), 1, &LightSpecular[0]);
 
+        glUniform1f(glGetUniformLocation(ShaderProgram, "PointLight.Constant"), 1.0f);
+        glUniform1f(glGetUniformLocation(ShaderProgram, "PointLight.Linear"), 0.09f);
+        glUniform1f(glGetUniformLocation(ShaderProgram, "PointLight.Quadratic"), 0.032f);
+
+        //SpotLight
+        glm::vec3 SpotLightColor;
+        SpotLightColor.r = 0.0f;
+        SpotLightColor.g = 0.0f;
+        SpotLightColor.b = 1.0f;        
+        glm::vec3 SpotLightDiffuse = SpotLightColor * glm::vec3(0.5f);
+        glm::vec3 SpotLightAmbiant = SpotLightDiffuse * glm::vec3(0.2f);
+        glm::vec3 SpotLightSpecular = glm::vec3(1.0f);        
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "SpotLight.Position"), 1, &CameraPos[0]);
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "SpotLight.Direction"), 1, &CameraDirection[0]);
+        
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "SpotLight.Ambiant"), 1, &SpotLightAmbiant[0]);   
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "SpotLight.Diffuse"), 1, &SpotLightDiffuse[0]);
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "SpotLight.Specular"), 1, &SpotLightSpecular[0]);
+        
+        glUniform1f(glGetUniformLocation(ShaderProgram, "SpotLight.Constant"), 1.0f);
+        glUniform1f(glGetUniformLocation(ShaderProgram, "SpotLight.Linear"), 0.09f);
+        glUniform1f(glGetUniformLocation(ShaderProgram, "SpotLight.Quadratic"), 0.032f);
+        
+        glUniform1f(glGetUniformLocation(ShaderProgram, "SpotLight.CutOff"), glm::cos(glm::radians(12.5f)));
+        glUniform1f(glGetUniformLocation(ShaderProgram, "SpotLight.OuterCutOff"), glm::cos(glm::radians(17.5f)));
+        
         for(int CubeIndex = 0;
             CubeIndex < ArrayCount(CubePosition);
             CubeIndex++)
@@ -711,7 +807,6 @@ int main()
             
             glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);   
         }
-
 	
         glUseProgram(ShaderLightProgram);
 
