@@ -497,7 +497,7 @@ int main()
         "uniform vec3 UniViewPosition;\n"
         "uniform material Material;\n"
         
-        "uniform spot_light SpotLight;\n"
+        "uniform spot_light UniSpot;\n"
         "uniform point_light PointLight;\n"
         "uniform direction_light DirectionLight;\n"
 
@@ -514,7 +514,7 @@ int main()
         "       vec3 Diffuse = Diff * DirLight.Diffuse * vec3(texture(Material.Diffuse, TexCoord));\n"
         
         "       return (Ambiant + Diffuse + Specular);\n"
-        "};\n"
+        "}\n"
         
         "vec3 APointLight(point_light PointLight, vec3 NormalVec, vec3 ViewDirection, vec3 FragPos)\n"
         "{\n"
@@ -536,31 +536,31 @@ int main()
         "       Specular *= Attenuation;\n"
 
         "       return (Ambiant + Diffuse + Specular);\n"
-        "};\n"
-        
-        "vec3 CSpotLight(spot_light SpotLight, vec3 NormalVec, vec3 ViewDirection, vec3 FragPos)\n"
+        "}\n"
+
+	"vec3 CSpotLight(spot_light Spot, vec3 NormalVec, vec3 ViewDirection, vec3 FragPos)\n"
         "{\n"
-        "       vec3 LightDir = normalize(SpotLight.Position - FragPos);\n"
+        "       vec3 LightDir = normalize(Spot.Position - FragPos);\n"
         "       vec3 ReflectDir = reflect(-LightDir, NormalVec);\n"
         
         "       float Diff = max(dot(NormalVec, LightDir), 0.0f);\n"
         "       float Spec = pow(max(dot(ReflectDir, ViewDirection), 0.0f), Material.Shininess);\n"
         
-        "       float Theta = dot(LightDir, normalize(-SpotLight.Direction));\n"// angle more = value less.
-        "       float Epsilon = SpotLight.CutOff - SpotLight.OuterCutOff;\n"// angle more = value less.
-        "       float Intensity = clamp((Theta - SpotLight.OuterCutOff) / Epsilon, 0.0f, 1.0f);\n"
+        "       float Theta = dot(LightDir, normalize(-Spot.Direction));\n"// angle more = value less.
+        "       float Epsilon = Spot.CutOff - Spot.OuterCutOff;\n"// angle more = value less.
+        "       float Intensity = clamp((Theta - Spot.OuterCutOff) / Epsilon, 0.0f, 1.0f);\n"
 
-        "       vec3 Ambiant = SpotLight.Ambiant * vec3(texture(Material.Diffuse, TexCoord));\n"
-        "       vec3 Specular = Spec * SpotLight.Specular * vec3(texture(Material.Specular, TexCoord));\n"
-        "       vec3 Diffuse = Diff * SpotLight.Diffuse * vec3(texture(Material.Diffuse, TexCoord));\n"
+        "       vec3 Ambiant = Spot.Ambiant * vec3(texture(Material.Diffuse, TexCoord));\n"
+        "       vec3 Specular = Spec * Spot.Specular * vec3(texture(Material.Specular, TexCoord));\n"
+        "       vec3 Diffuse = Diff * Spot.Diffuse * vec3(texture(Material.Diffuse, TexCoord));\n"
         
         "       Ambiant *= Intensity;\n"	
         "       Diffuse *= Intensity;\n"	
         "       Specular *= Intensity;\n"
 
         "       return (Ambiant + Diffuse + Specular);\n"
-        "};\n"
-
+        "}\n"
+	
         "void main()\n"
         "{\n"
         	
@@ -569,7 +569,8 @@ int main()
         
         "       vec3 Result = PDirectionLight(DirectionLight, Norm, ViewDir);\n"
         "       Result += APointLight(PointLight, Norm, ViewDir, FragPos);\n"
-        "       Result += CSpotLight(SpotLight, Norm, ViewDir, FragPos);\n"
+	
+        "       Result += CSpotLight(UniSpot, Norm, ViewDir, FragPos);\n"
         
         "       FragColor = vec4(Result, 1.0f);\n"
 
@@ -782,19 +783,19 @@ int main()
         glm::vec3 SpotLightDiffuse = SpotLightColor * glm::vec3(0.5f);
         glm::vec3 SpotLightAmbiant = SpotLightDiffuse * glm::vec3(0.2f);
         glm::vec3 SpotLightSpecular = glm::vec3(1.0f);        
-        glUniform3fv(glGetUniformLocation(ShaderProgram, "SpotLight.Position"), 1, &CameraPos[0]);
-        glUniform3fv(glGetUniformLocation(ShaderProgram, "SpotLight.Direction"), 1, &CameraDirection[0]);
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "UniSpot.Position"), 1, &CameraPos[0]);
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "UniSpot.Direction"), 1, &CameraDirection[0]);
         
-        glUniform3fv(glGetUniformLocation(ShaderProgram, "SpotLight.Ambiant"), 1, &SpotLightAmbiant[0]);   
-        glUniform3fv(glGetUniformLocation(ShaderProgram, "SpotLight.Diffuse"), 1, &SpotLightDiffuse[0]);
-        glUniform3fv(glGetUniformLocation(ShaderProgram, "SpotLight.Specular"), 1, &SpotLightSpecular[0]);
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "UniSpot.Ambiant"), 1, &SpotLightAmbiant[0]);   
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "UniSpot.Diffuse"), 1, &SpotLightDiffuse[0]);
+        glUniform3fv(glGetUniformLocation(ShaderProgram, "UniSpot.Specular"), 1, &SpotLightSpecular[0]);
         
-        glUniform1f(glGetUniformLocation(ShaderProgram, "SpotLight.Constant"), 1.0f);
-        glUniform1f(glGetUniformLocation(ShaderProgram, "SpotLight.Linear"), 0.09f);
-        glUniform1f(glGetUniformLocation(ShaderProgram, "SpotLight.Quadratic"), 0.032f);
+        glUniform1f(glGetUniformLocation(ShaderProgram, "UniSpot.Constant"), 1.0f);
+        glUniform1f(glGetUniformLocation(ShaderProgram, "UniSpot.Linear"), 0.09f);
+        glUniform1f(glGetUniformLocation(ShaderProgram, "UniSpot.Quadratic"), 0.032f);
         
-        glUniform1f(glGetUniformLocation(ShaderProgram, "SpotLight.CutOff"), glm::cos(glm::radians(12.5f)));
-        glUniform1f(glGetUniformLocation(ShaderProgram, "SpotLight.OuterCutOff"), glm::cos(glm::radians(17.5f)));
+        glUniform1f(glGetUniformLocation(ShaderProgram, "UniSpot.CutOff"), glm::cos(glm::radians(12.5f)));
+        glUniform1f(glGetUniformLocation(ShaderProgram, "UniSpot.OuterCutOff"), glm::cos(glm::radians(17.5f)));
         
         for(int CubeIndex = 0;
             CubeIndex < ArrayCount(CubePosition);
