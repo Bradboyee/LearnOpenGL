@@ -1,4 +1,4 @@
 mkdir ../build
 pushd ../build
-clang++ -g ../code/main.cpp ../code/glad.c -I../include -L/opt/homebrew/lib -lglfw3 -framework Cocoa -framework OpenGL -framework IOKit 
+clang++ -g -O0 -std=c++11 ../code/main.cpp ../code/glad.c -o main -I../include -L../lib -lglfw3 -lassimp -framework Cocoa -framework OpenGL -framework IOKit -Wl,-rpath,../lib
 popd
