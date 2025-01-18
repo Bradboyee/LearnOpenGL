@@ -175,6 +175,27 @@ void ScrollCallback(GLFWwindow* Window, double XOffset, double YOffset)
 	
 }
 
+internal void WriteStencil()
+{
+    glStencilMask(0xFF); // enable writing to the stencil buffer || and oper the byte write
+    //NOTE(Brad): stencil buffer default is 0.
+    glStencilFunc(GL_ALWAYS, 1
+		  , 0xFF);//mask all ref and buffer
+    //NOTE(Brad) : stencil then depth test.
+    glStencilOp(
+	GL_KEEP,//s fail
+	GL_KEEP,//s pass but d fail
+	GL_REPLACE);//pass both
+}
+
+internal void WriteExceptWrittenStencil()
+{
+    glStencilMask(0x00);
+    glStencilFunc(GL_NOTEQUAL, 1
+		  , 0xFF);//mask all ref and buffer
+    glDisable(GL_DEPTH_TEST);
+}
+
 int main()
 {
     glfwInit();
@@ -275,15 +296,6 @@ int main()
     glm::vec3 CubePosition[] =
         {
             glm::vec3( 0.0f,  0.0f,  0.0f),
-            glm::vec3( 2.0f,  5.0f, -15.0f),
-            glm::vec3(-1.5f, -2.2f, -2.5f),
-            glm::vec3(-3.8f, -2.0f, -12.3f),
-            glm::vec3( 2.4f, -0.4f, -3.5f),
-            glm::vec3(-1.7f,  3.0f, -7.5f),
-            glm::vec3( 1.3f, -2.0f, -2.5f),
-            glm::vec3( 1.5f,  2.0f, -2.5f),
-            glm::vec3( 1.5f,  0.2f, -1.5f),
-            glm::vec3(-1.3f,  1.0f, -1.5f)
         };
     uint32 Texture1;
     glGenTextures(1, &Texture1);
@@ -561,6 +573,14 @@ int main()
         "       return (Ambiant + Diffuse + Specular);\n"
         "}\n"
 	
+        "float near = 0.1f;\n"
+        "float far = 100.0f;\n"
+	
+        "float LinearDepth(float depth)\n"
+        "{\n"
+	"       float z = depth * 2.0f - 1.0f;\n"
+	"       return (2.0 * near * far) / (far + near - z * (far - near));\n"	
+	"}\n"	
         "void main()\n"
         "{\n"
         	
@@ -572,7 +592,8 @@ int main()
 	
         "       Result += CSpotLight(UniSpot, Norm, ViewDir, FragPos);\n"
         
-        "       FragColor = vec4(Result, 1.0f);\n"
+        "       float depth = LinearDepth(gl_FragCoord.z) / far;\n"
+        "       FragColor = vec4(vec3(depth), 1.0f);\n"
 
         "}\0";
     uint32 FragmentShader;
@@ -650,12 +671,13 @@ int main()
     glUseProgram(0);
     
     glEnable(GL_DEPTH_TEST);    
-
+    glEnable(GL_STENCIL_TEST);
+    
     real32 DeltaTime = 0.0f;
     real32 LastFrame = glfwGetTime();
     real32 CameraSpeed = 2.0f;
 
-    glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 30.0f);
+    glm::vec3 lightPos = glm::vec3(1.0f, 1.0f, 1.0f);
     while(!glfwWindowShouldClose(Window))
     {
         real32 CurrentTime = glfwGetTime();
@@ -694,7 +716,7 @@ int main()
         // NOTE(Brad): state setting. 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         // NOTE(Brad): state using.
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 
         real32 TimeValue = glfwGetTime();
@@ -719,7 +741,8 @@ int main()
        
         // NOTE(Brad): select VAO to draw.
         glBindVertexArray(VAO);
-	
+
+	WriteStencil();
         glUseProgram(ShaderProgram);
         
         glActiveTexture(GL_TEXTURE0);
@@ -808,7 +831,8 @@ int main()
             
             glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);   
         }
-	
+
+	WriteExceptWrittenStencil();
         glUseProgram(ShaderLightProgram);
 
         uint32 LightModelUniLocation = glGetUniformLocation(ShaderLightProgram, "model");
@@ -818,11 +842,12 @@ int main()
         glUniformMatrix4fv(LightViewUniLocation, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(LightProjectionUniLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
-        model = glm::translate(glm::mat4(1.0f), lightPos);
-        model = glm::scale(model, glm::vec3(0.3f));
-        glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
+        model = glm::translate(glm::mat4(1.0f), CubePosition[0]);
+        model = glm::scale(model, glm::vec3(1.1f));
+        glUniformMatrix4fv(LightModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
         glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);	    
-	
+
+	WriteStencil();
         // NOTE(Brad): remove VAO to draw.
         glBindVertexArray(0);		
         
