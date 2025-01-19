@@ -188,12 +188,89 @@ internal void WriteStencil()
 	GL_REPLACE);//pass both
 }
 
-internal void WriteExceptWrittenStencil()
+struct texture_image
 {
-    glStencilMask(0x00);
-    glStencilFunc(GL_NOTEQUAL, 1
-		  , 0xFF);//mask all ref and buffer
-    glDisable(GL_DEPTH_TEST);
+    union
+    {
+	uint32 TextureID[5];
+	struct
+	{
+	    uint32 ContainerTexture;
+	    uint32 AwesomeFaceTexture;
+	    uint32 Container2Texture;
+	    uint32 Container2SpecularTexture;
+	    uint32 GrassTexture;
+	};
+    };
+};
+
+//using pointers, need to move the position of the pointer
+int strcmp_ptr(char *src1, char *src2)
+{
+    while((*src1!='\0') || (*src2!='\0'))
+    {
+        if(*src1 > *src2)
+            return 0;
+        if(*src1 < *src2)
+            return 0;
+        src1++;
+        src2++;
+    }
+    return 1;
+}
+
+internal void LoadTexture(uint32 *TextureID, char *TexturePath)
+{
+    char *FileExtension;
+    char *FileEx;
+    FileEx = TexturePath;
+    FileEx += 2;//prevent relative path.
+    while(*FileEx++)
+    {
+	if(*FileEx == '.')
+	{
+	    FileEx++;
+	    break;
+	}
+    }
+	
+    int Width, Height, NRChannel;
+    glGenTextures(1, TextureID);
+    glBindTexture(GL_TEXTURE_2D, *TextureID);
+
+    //NOTE(Brad): str = xyz
+    bool32 IsPNG = strcmp_ptr(FileEx, (char *) "png");
+    if(IsPNG)
+    {
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);	
+    }
+    else
+    {
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    uint8 *GrassData = stbi_load(TexturePath, &Width, &Height, &NRChannel, 0);
+    if(GrassData)
+    {
+	if(IsPNG)
+	{
+	    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, GrassData);
+	}
+	else
+	{
+	    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Width, Height, 0, GL_RGB, GL_UNSIGNED_BYTE, GrassData);	    
+	}
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load Image " << TexturePath << std::endl;
+    }
+    stbi_image_free(GrassData);
 }
 
 int main()
@@ -229,7 +306,7 @@ int main()
 
     // -1 to 1 and y -1 start from the bottom.
     // NOTE(Brad): position 3 texture 2 normal 3
-    real32 Vertices[] = {
+    real32 CubeVertices[] = {
         // Front face
         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, // Top right
         0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Bottom right
@@ -267,7 +344,7 @@ int main()
         0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f, -1.0f, 0.0f // Top right
     };
 
-    uint32 Indices[] = {
+    uint32 CubeIndices[] = {
         // Front face
         0, 1, 3,
         1, 2, 3,
@@ -293,103 +370,32 @@ int main()
         21, 22, 23
     };
 
+    real32 PlainVertices[] = {
+        0.5f,  0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, // Top right
+        0.5f, -0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Bottom right
+        -0.5f, -0.5f,  0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Bottom left
+        -0.5f,  0.5f,  0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // Top left
+    };
+
+    
+    uint32 PlainIndices[] = {
+        // Front face
+        0, 3, 1,
+        1, 2, 0,
+    };
     glm::vec3 CubePosition[] =
         {
             glm::vec3( 0.0f,  0.0f,  0.0f),
         };
-    uint32 Texture1;
-    glGenTextures(1, &Texture1);
-    //NOTE(Brad): gl texture 0 always active so we still dont need this line.
-    glBindTexture(GL_TEXTURE_2D, Texture1);
 
-    //NOTE(Brad): str = xyz
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        
-    int Width, Height, NRChannel;
+    
+    texture_image Sampler2d = {};
     stbi_set_flip_vertically_on_load(true);
-    uint8 *ContainerData = stbi_load("../data/container.jpg", &Width, &Height, &NRChannel, 0);    
-    if(ContainerData)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, Width, Height, 0, GL_RGB, GL_UNSIGNED_BYTE, ContainerData);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load Image Container" << std::endl;
-    }
-    stbi_image_free(ContainerData);
-
-    //NOTE(Brad): switch to texture2.
-    uint32 Texture2;
-    glGenTextures(1, &Texture2);
-    glBindTexture(GL_TEXTURE_2D, Texture2);
-
-    //NOTE(Brad): str = xyz
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
-    uint8 *AwesomeFaceData = stbi_load("../data/awesomeface.png", &Width, &Height, &NRChannel, 0);
-    if(AwesomeFaceData)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, AwesomeFaceData);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load Image AwesomeFace" << std::endl;
-    }
-    stbi_image_free(AwesomeFaceData);
-    
-    //NOTE(Brad): switch to texture3.
-    uint32 Texture3;
-    glGenTextures(2, &Texture3);
-    glBindTexture(GL_TEXTURE_2D, Texture3);
-
-    //NOTE(Brad): str = xyz
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
-    uint8 *Container2Data = stbi_load("../data/container2.png", &Width, &Height, &NRChannel, 0);
-    if(Container2Data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, Container2Data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load Image Container2Data" << std::endl;
-    }
-    stbi_image_free(Container2Data);
-
-    //NOTE(Brad): switch to texture4.
-    uint32 Texture4;
-    glGenTextures(3, &Texture4);
-    glBindTexture(GL_TEXTURE_2D, Texture4);
-
-    //NOTE(Brad): str = xyz
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
-    uint8 *Container2SpecularData = stbi_load("../data/container2_specular.png", &Width, &Height, &NRChannel, 0);
-    if(Container2SpecularData)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, Container2SpecularData);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load Image Container2SpecularData" << std::endl;
-    }
-    stbi_image_free(Container2SpecularData);
+    LoadTexture(&Sampler2d.ContainerTexture, (char *) "../data/container.jpg");
+    LoadTexture(&Sampler2d.AwesomeFaceTexture, (char *) "../data/awesomeface.png");
+    LoadTexture(&Sampler2d.Container2Texture, (char *) "../data/container2.png");
+    LoadTexture(&Sampler2d.Container2SpecularTexture, (char *) "../data/container2_specular.png");
+    LoadTexture(&Sampler2d.GrassTexture, (char *) "../data/grass.png");
     
     uint32 VAO;
     glGenVertexArrays(1, &VAO);
@@ -401,13 +407,13 @@ int main()
     glGenBuffers(1, &VBO);
     
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(CubeVertices), CubeVertices, GL_STATIC_DRAW);
 
     // NOTE(Brad): must be after VBO.
     uint32 EBO;
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), Indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(CubeIndices), CubeIndices, GL_STATIC_DRAW);
 
     // NOTE(Brad): aPos
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float)*8, (void*)0);
@@ -505,6 +511,7 @@ int main()
         "in vec3 FragPos;\n"
         "uniform sampler2D UniTexture1;\n"
         "uniform sampler2D UniTexture2;\n"
+        "uniform sampler2D UniTexture3;\n"
 
         "uniform vec3 UniViewPosition;\n"
         "uniform material Material;\n"
@@ -593,7 +600,13 @@ int main()
         "       Result += CSpotLight(UniSpot, Norm, ViewDir, FragPos);\n"
         
         "       float depth = LinearDepth(gl_FragCoord.z) / far;\n"
-        "       FragColor = vec4(vec3(depth), 1.0f);\n"
+//        "       FragColor = vec4(vec3(depth), 1.0f);\n"
+//        "       FragColor = vec4(Result, 1.0f);\n"
+	
+        "       vec4 Grass = texture(UniTexture3, TexCoord);\n"
+        "       if(Grass.a < 0.1)\n"
+        "         discard;\n"
+        "       FragColor = texture(UniTexture3, TexCoord);\n"
 
         "}\0";
     uint32 FragmentShader;
@@ -656,10 +669,10 @@ int main()
     glUseProgram(ShaderProgram);
     glUniform1i(glGetUniformLocation(ShaderProgram, "UniTexture1"), 0);
     glUniform1i(glGetUniformLocation(ShaderProgram, "UniTexture2"), 1);    
-    
+    glUniform1i(glGetUniformLocation(ShaderProgram, "UniTexture3"), Sampler2d.GrassTexture - 1);//grass
     //NOTE(Brad): Lighting Material.
     
-    glUniform1i(glGetUniformLocation(ShaderProgram, "Material.Diffuse"), 2);    
+    glUniform1i(glGetUniformLocation(ShaderProgram, "Material.Diffuse"), 2);
     glUniform1i(glGetUniformLocation(ShaderProgram, "Material.Specular"), 3);
 
     real32 Shininess = 32.0f;
@@ -669,9 +682,13 @@ int main()
     glUseProgram(ShaderLightProgram);
     
     glUseProgram(0);
-    
-    glEnable(GL_DEPTH_TEST);    
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    
     
     real32 DeltaTime = 0.0f;
     real32 LastFrame = glfwGetTime();
@@ -742,20 +759,18 @@ int main()
         // NOTE(Brad): select VAO to draw.
         glBindVertexArray(VAO);
 
-	WriteStencil();
+
+	glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
         glUseProgram(ShaderProgram);
-        
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, Texture1);
-        
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, Texture2);
-        
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, Texture3);
-        
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, Texture4);
+
+	for(uint32 i = 0;
+	    i < ArrayCount(Sampler2d.TextureID);
+	    i++)
+	{
+	    glActiveTexture(GL_TEXTURE0 + i);
+	    glBindTexture(GL_TEXTURE_2D, Sampler2d.TextureID[i]);
+	}
 	
         uint32 ModelUniLocation = glGetUniformLocation(ShaderProgram, "model");
         uint32 ViewUniLocation = glGetUniformLocation(ShaderProgram, "view");
@@ -829,10 +844,12 @@ int main()
             model = glm::rotate(model, glm::radians(CubeIndex * 20.0f), glm::vec3(1.0f, 1.0f, 0.0f));
             glUniformMatrix4fv(ModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
             
-            glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);   
+            glDrawElements(GL_TRIANGLES, ArrayCount(CubeIndices), GL_UNSIGNED_INT, 0);   
         }
 
-	WriteExceptWrittenStencil();
+	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glDisable(GL_DEPTH_TEST);
         glUseProgram(ShaderLightProgram);
 
         uint32 LightModelUniLocation = glGetUniformLocation(ShaderLightProgram, "model");
@@ -843,11 +860,13 @@ int main()
         glUniformMatrix4fv(LightProjectionUniLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
         model = glm::translate(glm::mat4(1.0f), CubePosition[0]);
-        model = glm::scale(model, glm::vec3(1.1f));
+        model = glm::scale(model, glm::vec3(1.01f));
         glUniformMatrix4fv(LightModelUniLocation, 1, GL_FALSE, glm::value_ptr(model));
-        glDrawElements(GL_TRIANGLES, ArrayCount(Indices), GL_UNSIGNED_INT, 0);	    
+        glDrawElements(GL_TRIANGLES, ArrayCount(CubeIndices), GL_UNSIGNED_INT, 0);	    
 
-	WriteStencil();
+
+        WriteStencil();
+        glEnable(GL_DEPTH_TEST);
         // NOTE(Brad): remove VAO to draw.
         glBindVertexArray(0);		
         
@@ -867,8 +886,12 @@ int main()
     glDeleteBuffers(1, &EBO);
     glDeleteProgram(ShaderProgram);
     glDeleteProgram(ShaderLightProgram);
-    glDeleteTextures(1, &Texture1);
-    glDeleteTextures(1, &Texture2);
+    for(uint32 i = 0;
+	i < ArrayCount(Sampler2d.TextureID);
+	i++)
+    {
+	glDeleteTextures(1, &Sampler2d.TextureID[i]);
+    }
     glfwTerminate();
     return 0;
 }
